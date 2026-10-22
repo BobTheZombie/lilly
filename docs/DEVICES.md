@@ -1,5 +1,9 @@
 # Device management and util-linux integration
 
+0.5 adds a source-built standalone engine profile, documented in
+[engines/README.md](../engines/README.md). The following external-provider path
+remains the smaller bootstrap option when native_engines is disabled.
+
 Lilly's device path uses an actual udev provider: eudev or systemd-udevd and its
 matching udevadm/libudev/rules/hwdb packages. Lilly does not implement a new rule
 engine or claim compatibility with every recent systemd-udevd feature. The

@@ -100,9 +100,9 @@ echo LILLY_SOCKET_RESTART_OK
     elif case=='idle':
         init=b'#!/bin/sh\nmount -t devtmpfs devtmpfs /dev\n(sleep 3; echo LILLY_IDLE_ALIVE; kill -TERM 1) &\nexec /lilly\n'
         units={'done.service':unit('/bin/echo LILLY_ONESHOT_DONE')}
-    elif case=='reboot':
+    elif case in ('reboot','halt'):
         init=None
-        units={'reboot.service':unit('/lilly ctl /run/lilly/control reboot')}
+        units={case+'.service':unit('/lilly ctl /run/lilly/control '+case)}
     else:
         init=None
         units={
@@ -151,17 +151,19 @@ def main():
     parser.add_argument('--log-dir',required=True,type=Path)
     args=parser.parse_args()
     logs=args.log_dir; logs.mkdir(parents=True,exist_ok=True)
-    for case in ['boot','idle','invalid','reboot','services']:
+    for case in ['boot','idle','invalid','reboot','halt','services']:
         with tempfile.TemporaryDirectory() as tmp:
             initrd=Path(tmp)/'initrd.gz'; initrd.write_bytes(image(args.busybox,case,args.lilly,args.probe,args.servicectl,args.logd))
             cmd=[args.qemu,'-accel','tcg','-m','256M','-smp','2','-display','none',
                  '-serial','stdio','-monitor','none','-nic','none','-no-reboot',
                  '-kernel',str(args.kernel),'-initrd',str(initrd),
                  '-append','console=ttyS0 panic=-1 quiet rdinit=/init']
-            try: r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=90)
+            try: r=subprocess.run(cmd,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,timeout=20 if case=='halt' else 90)
             except subprocess.TimeoutExpired as e:
                 (logs/(case+'.log')).write_bytes(e.stdout or b'')
-                raise RuntimeError(f'{case}: guest timeout; see {logs}') from e
+                if case=='halt' and b'System halted' in (e.stdout or b''):
+                    r=subprocess.CompletedProcess(cmd,0,e.stdout)
+                else:raise RuntimeError(f'{case}: guest timeout; see {logs}') from e
             text=r.stdout.decode(errors='replace'); (logs/(case+'.log')).write_text(text)
             assert r.returncode==0, f'{case}: QEMU failed ({r.returncode}); see {logs}'
             assert 'Kernel panic' not in text, f'{case}: kernel panic'
@@ -177,6 +179,7 @@ def main():
             elif case=='idle':
                 assert 'LILLY_IDLE_ALIVE' in text and 'LILLY_ONESHOT_DONE' in text
             elif case=='invalid': assert 'EMERGENCY: PID 1 retained' in text
+            elif case=='halt': assert 'shutting down (halt)' in text and 'System halted' in text
             else: assert 'shutting down (reboot)' in text
             print(f'PASS QEMU {case}',flush=True)
 

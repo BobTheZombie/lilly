@@ -1,0 +1,17 @@
+--- a/src/login/logind-dbus.c
++++ b/src/login/logind-dbus.c
+@@ -2127,11 +2127,11 @@
+ 
+         switch ( action ) {
+                 case HANDLE_POWEROFF:
+-                        return elogind_run_helper( m, POWEROFF, "poweroff", NULL );
++                        return elogind_run_helper( m, "/usr/bin/servicectl", "poweroff", "poweroff" );
+                 case HANDLE_REBOOT:
+-                        return elogind_run_helper( m, REBOOT, "reboot", NULL );
++                        return elogind_run_helper( m, "/usr/bin/servicectl", "reboot", "reboot" );
+                 case HANDLE_HALT:
+-                        return elogind_run_helper( m, HALT, "halt", NULL );
++                        return elogind_run_helper( m, "/usr/bin/servicectl", "halt", "halt" );
+                 case HANDLE_KEXEC:
+                         return elogind_run_helper( m, KEXEC, "kexec", "-e" );
+                 case HANDLE_SUSPEND:

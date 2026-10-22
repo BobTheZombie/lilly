@@ -72,7 +72,7 @@ int main(int argc,char **argv) {
         if(opt=='r')rootpath=optarg;
         else if(opt=='s'){socketpath=optarg;explicit_socket=true;}
         else if(opt=='n')now=true;
-        else {puts("Usage: servicectl [--root ROOT] [--socket PATH] [--now] {enable|disable|is-enabled|list-unit-files|status|start|stop|restart|poweroff|reboot} [UNIT]");return opt=='h'?0:1;}
+        else {puts("Usage: servicectl [--root ROOT] [--socket PATH] [--now] {enable|disable|is-enabled|list-unit-files|status|start|stop|restart|poweroff|reboot|halt} [UNIT]");return opt=='h'?0:1;}
     }
     if(optind>=argc)return 1;
     const char *cmd=argv[optind++];char name[201];const char *unit=NULL;
@@ -95,8 +95,8 @@ int main(int argc,char **argv) {
         return 0;
     }
     if(now)return 1;
-    if(strcmp(cmd,"status")&&strcmp(cmd,"start")&&strcmp(cmd,"stop")&&strcmp(cmd,"restart")&&strcmp(cmd,"poweroff")&&strcmp(cmd,"reboot")){fprintf(stderr,"unsupported command: %s\n",cmd);return 1;}
+    if(strcmp(cmd,"status")&&strcmp(cmd,"start")&&strcmp(cmd,"stop")&&strcmp(cmd,"restart")&&strcmp(cmd,"poweroff")&&strcmp(cmd,"reboot")&&strcmp(cmd,"halt")){fprintf(stderr,"unsupported command: %s\n",cmd);return 1;}
     if((!strcmp(cmd,"start")||!strcmp(cmd,"stop")||!strcmp(cmd,"restart"))&&!unit){fprintf(stderr,"unit required\n");return 1;}
-    if((!strcmp(cmd,"poweroff")||!strcmp(cmd,"reboot"))&&unit)return 1;
+    if((!strcmp(cmd,"poweroff")||!strcmp(cmd,"reboot")||!strcmp(cmd,"halt"))&&unit)return 1;
     return request(socketpath,cmd,unit);
 }

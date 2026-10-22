@@ -1,0 +1,11 @@
+[Unit]
+Description=Lilly standalone login1 session, seat, inhibitor and device-access manager
+Requires=dbus.service udev-trigger.service
+After=dbus.service udev-trigger.service
+
+[Service]
+Type=simple
+ExecStart=/usr/lib/lilly/engines/lilly-logind
+Restart=on-failure
+RestartSec=2
+TimeoutStopSec=30

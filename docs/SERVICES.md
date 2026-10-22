@@ -58,3 +58,9 @@ See DEVICES.md for the configured provider contract. console-getty.service
 adds a tty1 login through util-linux; swap.service activates fstab swap.
 pam_lilly is available for the existing login/su/runuser/sshd PAM session stacks;
 no authentication policy is overwritten or auto-enabled.
+
+The standalone-engine profile provides lilly-logind.service and matching
+lilly-console-getty/lilly-serial-getty units. Select one getty per terminal.
+The matching full PAM client is pam_lilly_login.so, distinct from bootstrap
+pam_lilly.so. See engines/README.md for source builds and policy activation.
+servicectl halt requests an actual kernel halt, distinct from poweroff/reboot.

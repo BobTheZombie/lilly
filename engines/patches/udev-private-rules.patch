@@ -1,0 +1,11 @@
+--- a/src/udev/udev-rules.c
++++ b/src/udev/udev-rules.c
+@@ -42,7 +42,7 @@
+ #include "user-util.h"
+ #include "virt.h"
+ 
+-#define RULES_DIRS ((const char* const*) CONF_PATHS_STRV("udev/rules.d"))
++#define RULES_DIRS ((const char* const*) STRV_MAKE(CONF_PATHS("udev/rules.d"), "/usr/lib/lilly/engines/udev/rules.d"))
+ 
+ typedef enum {
+         OP_MATCH,        /* == */

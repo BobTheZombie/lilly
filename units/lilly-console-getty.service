@@ -1,0 +1,10 @@
+[Unit]
+Description=Virtual console login with Lilly login1 session support
+Requires=filesystems.service lilly-logind.service
+After=filesystems.service lilly-logind.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/agetty --noclear --login-program /usr/bin/login tty1 linux
+Restart=always
+RestartSec=2

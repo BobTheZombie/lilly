@@ -154,7 +154,7 @@ static void unmount_all(void) {
 }
 _Noreturn void platform_shutdown(int restart) {
     if(getpid()!=1) { errno=EPERM; perror("shutdown requires PID 1"); _exit(1); }
-    fprintf(stderr,"lilly: shutting down (%s)\n",restart?"reboot":"poweroff");
+    fprintf(stderr,"lilly: shutting down (%s)\n",restart==2?"halt":restart?"reboot":"poweroff");
     kill(-1,SIGTERM);
     struct timespec pause_time={.tv_nsec=100000000};
     for(int i=0;i<20;i++) { while(waitpid(-1,NULL,WNOHANG)>0) {} nanosleep(&pause_time,NULL); }
@@ -166,7 +166,7 @@ _Noreturn void platform_shutdown(int restart) {
     }
     unmount_all();
     fprintf(stderr,"lilly: shutdown complete\n");
-    reboot(restart?RB_AUTOBOOT:RB_POWER_OFF);
+    reboot(restart==2?RB_HALT_SYSTEM:restart?RB_AUTOBOOT:RB_POWER_OFF);
     perror("reboot syscall");
     for(;;) pause();
 }

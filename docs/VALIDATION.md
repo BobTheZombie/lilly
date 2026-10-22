@@ -1,4 +1,4 @@
-# Validation: 0.4.0 development milestone
+# Validation: 0.5.0 development milestone
 
 Validated on 2026-10-22 using GCC 13.3.0, Meson 1.12.1, Ninja 1.13.2,
 QEMU 8.2.2 TCG and Linux 6.8.0-138-generic as the disposable guest kernel.
@@ -88,3 +88,26 @@ cases skip under this restricted host). All five existing PID 1 guests and the
 new real-provider/PAM/util-linux guest passed. The OVMF EFI regression also
 passed. Staged installation includes pam_lilly.so with exported session entry
 points and a valid native catalog, with no active PAM-policy or init replacement.
+
+## Standalone native engine profile
+
+Pinned udev 257.10 and elogind/login1 256 were built from C sources through the
+Meson/Ninja profile and staged with private RPATHs, full generated rules/data,
+compiled private hwdb, client libraries and source/license provenance. No host
+device/session daemon or PAM policy was changed. Both the direct build driver
+and parent Meson compile/install path were exercised.
+
+The native guest validates rule ATTR matching, GOTO/LABEL flow, PROGRAM/RESULT,
+program and hwdb IMPORT, ENV append, final MODE assignment, SYMLINK and RUN;
+real login1 D-Bus introspection; inhibitor-FD lifetime; a full PAM-created nobody
+session and its properties; denied unprivileged PowerOff; and authorized D-Bus
+PowerOff routed through servicectl to Lilly PID 1. This is actual engine code,
+not an IPC mock. Hardware seat/DRM handoff and real suspend are not validated by
+this guest.
+
+The PID 1 suite additionally checks Halt reaches RB_HALT_SYSTEM and the kernel's
+System halted state; QEMU is then stopped after observing that terminal state.
+This distinguishes Halt from PowerOff. Native-engine CI repeats source fetching,
+full build, stage, host tests and guest boot. Enable the extra guest with
+-Dnative_engine_vm_tests=true -Dnative_engine_stage=/absolute/stage plus vm_tests
+options, and install into that staging directory before running it.

@@ -1,23 +1,24 @@
 #!/bin/bash
 # Experimental system manager. Installation does not switch the active init.
 NAME="lilly"
-VERSION="0.4.0"
+VERSION="0.5.0"
 RELEASE="1"
 ARCH="${ARCH:-x86_64}"
-SUMMARY="Lilly PID 1, socket activation, service control and EFI bootloader"
+SUMMARY="Lilly PID 1 with standalone device/login1 engines and EFI bootloader"
 URL="https://github.com/BobTheZombie/lilly"
-LICENSE=("MIT")
+LICENSE=("MIT" "LGPL-2.1-or-later" "GPL-2.0-or-later")
 SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
 SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
 PATCHES=()
-REQUIRES=("glibc" "pam")
-BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils" "pam")
+REQUIRES=("glibc" "pam" "acl" "audit" "libcap" "libseccomp" "kmod" "util-linux-libs" "dbus" "polkit")
+BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils" "pam" "acl" "audit" "libcap" "libseccomp" "kmod" "util-linux-libs" "git" "gperf" "pkgconf" "patchelf")
 if [ "$ARCH" = x86_64 ]; then BUILD_REQUIRES+=("gnu-efi"); fi
-PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd" "lilly-devices" "lilly-sessions")
+REQUIRES_PYTHON_DEPENDENCIES=("jinja2")
+PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd" "lilly-devices" "lilly-sessions" "lilly-udevadm" "lilly-loginctl" "lilly-inhibit" "lilly-hwdb" "lilly-udevd" "lilly-logind")
 CONFLICTS=()
 OBSOLETES=()
 RECOMMENDS=()
-SUGGESTS=("eudev" "dbus" "networkmanager" "openssh" "util-linux")
+SUGGESTS=("networkmanager" "openssh" "util-linux")
 BUILD_OPTIONS=("@--stripping" "@--optimize=2")
 prepare() {
     set -euxo pipefail
@@ -27,6 +28,8 @@ prepare() {
     cd "$SRCROOT/$NAME-$VERSION"
     test -f meson.build
     test -f src/lilly.c
+    python3 tools/build_engines.py fetch --engine udev --sources "$SRCROOT/lilly-engine-sources"
+    python3 tools/build_engines.py fetch --engine logind --sources "$SRCROOT/lilly-engine-sources"
 }
 build() {
     set -euxo pipefail
@@ -34,7 +37,9 @@ build() {
     local efi=false
     if [ "$ARCH" = x86_64 ]; then efi=true; fi
     meson setup build --prefix=/usr --libdir=lib --libexecdir=/usr/libexec --sysconfdir=/etc \
-        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Dpam=enabled -Defi="$efi"
+        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Dpam=enabled -Defi="$efi" \
+        -Dnative_engines=true -Dengine_sources="$SRCROOT/lilly-engine-sources" \
+        -Dengine_jobs="${LPM_BUILD_JOBS:-4}"
     meson compile -C build -j "${LPM_BUILD_JOBS:-$(nproc)}"
 }
 check() {
@@ -54,6 +59,9 @@ staging() {
     test -s "$pkgdir/usr/lib/security/pam_lilly.so"
     test -x "$pkgdir/usr/bin/lilly-devices"
     test -x "$pkgdir/usr/bin/lilly-sessions"
+    test -x "$pkgdir/usr/lib/lilly/engines/lilly-udevd"
+    test -x "$pkgdir/usr/lib/lilly/engines/lilly-logind"
+    test -s "$pkgdir/usr/lib/security/pam_lilly_login.so"
     test ! -e "$pkgdir/sbin/init"
     test ! -e "$pkgdir/usr/bin/systemctl"
 }

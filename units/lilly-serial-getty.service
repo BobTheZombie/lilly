@@ -1,0 +1,10 @@
+[Unit]
+Description=Serial console login with Lilly login1 session support
+Requires=filesystems.service lilly-logind.service
+After=filesystems.service lilly-logind.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/agetty --noclear --login-program /usr/bin/login --keep-baud 115200,38400,9600 ttyS0 linux
+Restart=always
+RestartSec=2

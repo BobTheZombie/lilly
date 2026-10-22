@@ -1,5 +1,5 @@
 project('lilly', 'c',
-  version: '0.4.0',
+  version: '0.5.0',
   meson_version: '>=1.3.0',
   license: 'MIT',
   default_options: ['prefix=/usr', 'libexecdir=libexec', 'libdir=lib', 'sysconfdir=/etc', 'localstatedir=/var', 'c_std=c17', 'warning_level=3', 'werror=true', 'buildtype=debugoptimized'])
@@ -20,9 +20,11 @@ foreach key : ['udev_daemon', 'udev_admin']
     error(key + ' must be a literal absolute executable path')
   endif
 endforeach
+udev_daemon = get_option('native_engines') ? '/usr/lib/lilly/engines/lilly-udevd' : get_option('udev_daemon')
+udev_admin = get_option('native_engines') ? '/usr/bin/lilly-udevadm' : get_option('udev_admin')
 devices = executable('lilly-devices', 'src/devices.c', install: true,
-  c_args: ['-DLILLY_UDEVD="' + get_option('udev_daemon') + '"',
-           '-DLILLY_UDEVADM="' + get_option('udev_admin') + '"'])
+  c_args: ['-DLILLY_UDEVD="' + udev_daemon + '"',
+           '-DLILLY_UDEVADM="' + udev_admin + '"'])
 sessions = executable('lilly-sessions', ['src/sessions.c', 'src/fsutil.c'], install: true)
 pam_enabled = false
 pam_dep = cc.find_library('pam', required: get_option('pam'))
@@ -163,4 +165,48 @@ if get_option('device_vm_tests')
       '--pam-module', pam_vm_module.full_path(), '--pam-test', pam_vm_test.full_path(),
       '--log-dir', meson.current_build_dir() / 'vm-logs'],
     depends: [vm_init, devices, pam_vm_module, pam_vm_test], suite: 'vm', timeout: 130, is_parallel: false)
+endif
+
+if get_option('native_engines')
+  if meson.is_cross_build()
+    error('The standalone engine driver currently requires a native toolchain')
+  endif
+  engine_python = import('python').find_installation('python3')
+  engine_fs = import('fs')
+  engine_sources = get_option('engine_sources')
+  if engine_sources == ''
+    error('Set engine_sources after tools/build_engines.py fetch for udev and logind')
+  endif
+  engine_build = meson.current_build_dir() / 'engines'
+  engine_inputs = files('tools/build_engines.py', 'engines/sources.json',
+    'engines/patches/udev-private-rules.patch', 'engines/patches/udev-private-hwdb.patch',
+    'engines/patches/logind-lilly-power.patch')
+  engine_targets = {}
+  foreach engine : ['udev', 'logind']
+    if not engine_fs.is_file(engine_sources / engine / 'meson.build')
+      error('Missing pinned source checkout: ' + engine)
+    endif
+    engine_target = custom_target('lilly-native-' + engine,
+      depends: engine == 'logind' ? [engine_targets['udev']] : [],
+      output: engine + '-engine.stamp', input: engine_inputs,
+      command: [engine_python, files('tools/build_engines.py'), 'build',
+        '--engine', engine, '--sources', engine_sources, '--build', engine_build,
+        '--jobs', get_option('engine_jobs').to_string(), '--stamp', '@OUTPUT@'],
+      build_by_default: true, console: true)
+    engine_targets += {engine: engine_target}
+    meson.add_install_script(engine_python, files('tools/install_engines.py'), engine, engine_sources, engine_build)
+  endforeach
+endif
+install_subdir('engines', install_dir: docdir)
+
+if get_option('native_engine_vm_tests')
+  if not get_option('vm_tests') or get_option('native_engine_stage') == ''
+    error('Native engine VM tests need vm_tests and native_engine_stage')
+  endif
+  test('native-engines-vm', python,
+    args: [files('tests/native_engines_vm.py'), '--stage', get_option('native_engine_stage'),
+      '--kernel', get_option('vm_kernel'), '--busybox', get_option('vm_busybox'),
+      '--lilly', vm_init.full_path(), '--servicectl', vm_svc.full_path(),
+      '--qemu', qemu.full_path(), '--log-dir', meson.current_build_dir() / 'vm-logs'],
+    depends: [vm_init, vm_svc], suite: 'vm', timeout: 150, is_parallel: false)
 endif

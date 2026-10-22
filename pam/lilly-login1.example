@@ -1,0 +1,5 @@
+# Full login1 PAM client built with -Dnative_engines=true.
+# Add to the existing session stack after choosing Lilly as the login1 provider.
+# Authentication/account/password rules remain owned by login/sshd/su/runuser.
+# Do not stack with pam_systemd, pam_elogind or basic pam_lilly session tracking.
+session optional pam_lilly_login.so

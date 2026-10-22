@@ -32,3 +32,9 @@
 Every milestone must distinguish implemented behavior from future contracts.
 There are no placeholder administrative commands that return success without
 performing the requested operation.
+
+0.5 includes standalone source-built udev/login1 engines with private namespace,
+full engine PAM clients, recorded source/patch provenance and real combined
+guest coverage. Remaining compatibility work includes later login1 releases,
+Lilly user-manager/resource semantics and physical desktop/seat/sleep testing;
+the upstream implementation baseline and licenses remain explicit.

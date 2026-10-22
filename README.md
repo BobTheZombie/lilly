@@ -3,7 +3,7 @@
 **Linux Init, Login & Lifecycle System** — a modular Linux system manager in C,
 started for LPM Linux, with Linux interfaces intended for other distributions.
 
-**0.4.0 implements experimental PID 1 supervision, service administration,
+**0.5.0 implements experimental PID 1 supervision, service administration,
 Unix socket activation, logging and a real x86-64 UEFI bootloader.** Meson/Ninja
 build all programs. Installing the package does not change the active init or
 bootloader and does not enable services. LPM multi-init choices remain available.
@@ -14,7 +14,9 @@ bootloader and does not enable services. LPM multi-init choices remain available
 - Native vendor units for filesystem, device, D-Bus, networking, SSH and getty
   services; existing external daemons remain their providers.
 - Unix socket activation, descriptor handoff, service identities and /run directories.
-- Bounded udev readiness/coldplug/control integration with an actual provider.
+- Optional standalone source-built Lilly udev and login1 engines, with a pinned
+  compatibility baseline, private runtime libraries, rules and hwdb.
+- Native device readiness/coldplug/control and real login1 PAM integration.
 - Linux-PAM session module and util-linux console login/swap units.
 - `lilly-logd`, a credential-aware /dev/log datagram logger.
 - `lillyboot`, atomic ESP deployment/configuration and an optional GNU-EFI loader.
@@ -57,6 +59,13 @@ selecting /etc/lilly/enabled markers and their Requires closure. The legacy
 Explicit `lilly run DIRECTORY` also selects that directory's units. Simple
 services are considered started after exec, not application readiness.
 
-Read [device/PAM integration](docs/DEVICES.md), [service administration](docs/SERVICES.md), [Lillyboot](docs/LILLYBOOT.md),
+Read [standalone engine build/compatibility](engines/README.md),
+[device/PAM integration](docs/DEVICES.md), [service administration](docs/SERVICES.md), [Lillyboot](docs/LILLYBOOT.md),
 [PID 1 setup](docs/PID1.md), [scheduling](docs/SCHEDULING.md),
 [compatibility](docs/COMPATIBILITY.md) and [validation](docs/VALIDATION.md).
+
+The default Meson configuration builds the small bootstrap profile. The LPM
+recipe enables the full standalone-engine profile. Follow engines/README.md to
+fetch pinned sources and build it with Meson/Ninja; it needs the listed native
+development dependencies. These source-derived engines retain upstream LGPL/GPL
+licenses and are independent of an installed systemd/elogind daemon.

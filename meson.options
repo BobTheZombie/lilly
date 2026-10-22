@@ -17,3 +17,8 @@ option('pam_module_dir', type: 'string', value: 'lib/security', description: 'PA
 option('device_vm_tests', type: 'boolean', value: false, description: 'Test actual udev and PAM in a disposable QEMU guest (requires vm_tests and pam)')
 option('vm_udevd', type: 'string', value: '', description: 'Trusted host provider daemon for the device VM fixture')
 option('vm_udevadm', type: 'string', value: '', description: 'Trusted matching provider udevadm for the device VM fixture')
+option('native_engines', type: 'boolean', value: false, description: 'Build standalone Lilly udev and login1 engines from pinned source trees')
+option('engine_sources', type: 'string', value: '', description: 'Directory containing explicitly fetched udev/logind source checkouts')
+option('engine_jobs', type: 'integer', min: 1, value: 4, description: 'Parallel jobs per native engine build')
+option('native_engine_vm_tests', type: 'boolean', value: false, description: 'Boot source-built native rule/login1 engines from an explicitly staged installation')
+option('native_engine_stage', type: 'string', value: '', description: 'Staged native installation for native_engine_vm_tests')

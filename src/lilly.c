@@ -589,9 +589,9 @@ static void control_request(int c) {
             }
             used=(size_t)snprintf(response,sizeof response,"accepted\n");
         }
-    } else if (!strcmp(request, "poweroff") || !strcmp(request, "reboot") || !strcmp(request, "stop")) {
-        if (!strcmp(request, "stop") && pid1) used = (size_t)snprintf(response, sizeof response, "error: PID 1 supports poweroff/reboot, not exit\n");
-        else { shutdown_action = !strcmp(request, "reboot"); stop_all(); used = (size_t)snprintf(response, sizeof response, "accepted\n"); }
+    } else if (!strcmp(request, "poweroff") || !strcmp(request, "reboot") || !strcmp(request, "halt") || !strcmp(request, "stop")) {
+        if (!strcmp(request, "stop") && pid1) used = (size_t)snprintf(response, sizeof response, "error: PID 1 supports poweroff/reboot/halt, not exit\n");
+        else { shutdown_action = !strcmp(request, "halt") ? 2 : !strcmp(request, "reboot"); stop_all(); used = (size_t)snprintf(response, sizeof response, "accepted\n"); }
     } else used = (size_t)snprintf(response, sizeof response, "error: unknown command\n");
     ssize_t sent = send(c, response, used, MSG_NOSIGNAL);
     (void)sent;
@@ -735,9 +735,9 @@ int main(int argc, char **argv) {
     pid1 = getpid() == 1;
     if (pid1) platform_early();
     if (atexit(cleanup)) die("atexit failed");
-    if (!pid1 && argc == 2 && !strcmp(argv[1], "--version")) { puts("lilly 0.4.0-dev"); return 0; }
+    if (!pid1 && argc == 2 && !strcmp(argv[1], "--version")) { puts("lilly 0.5.0-dev"); return 0; }
     if (!pid1 && argc == 2 && !strcmp(argv[1], "--help")) {
-        puts("Usage: lilly {verify|plan|run} UNIT_DIRECTORY [SERVICE]\nUse lilly init [UNIT_DIRECTORY] as PID 1; lilly ctl SOCKET {status|stop|poweroff|reboot}."); return 0;
+        puts("Usage: lilly {verify|plan|run} UNIT_DIRECTORY [SERVICE]\nUse lilly init [UNIT_DIRECTORY] as PID 1; lilly ctl SOCKET {status|stop|poweroff|reboot|halt}."); return 0;
     }
     if (!pid1 && argc == 4 && !strcmp(argv[1], "ctl")) return control_client(argv[2], argv[3]);
     if (pid1) {
