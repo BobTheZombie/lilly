@@ -1,0 +1,10 @@
+[Unit]
+Description=OpenSSH daemon using existing host keys and policy
+Requires=filesystems.service
+After=filesystems.service networkmanager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/sshd -D -e
+Restart=on-failure
+RestartSec=2

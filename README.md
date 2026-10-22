@@ -3,28 +3,21 @@
 **Linux Init, Login & Lifecycle System** — a modular Linux system manager in C,
 started for LPM Linux, with Linux interfaces intended for other distributions.
 
-**0.2.0-dev implements experimental PID 1 boot and service scheduling.** It has
-disposable QEMU boot tests and ordinary process-lifecycle tests. It is not yet a
-production desktop replacement for systemd, logind or homed. Installing Lilly
-does not change the active init, bootloader, PAM policy or LPM transaction hooks.
-LPM's existing multi-init choices remain available.
+**0.3.0 implements experimental PID 1 supervision, service administration,
+Unix socket activation, logging and a real x86-64 UEFI bootloader.** Meson/Ninja
+build all programs. Installing the package does not change the active init or
+bootloader and does not enable services. LPM multi-init choices remain available.
 
-## Implemented
-
-- PID 1 early mounts, console setup, cgroup v2 and orphan reaping.
-- PID 1 persistence after services finish; emergency wait/reaper on fatal errors.
-- Graceful dependency-ordered shutdown, deadlines, sync, unmount/read-only remount
-  attempts and real kernel poweroff/reboot.
-- Deterministic dependency planning with Requires selection, After ordering,
-  missing requirement errors and cycle detection.
-- Parallel nonblocking fork/exec activation and honest exec failure reporting.
-- Simple/oneshot services, configurable start/stop timeouts, bounded restart
-  windows and runtime hard-dependency failure propagation.
-- Per-service FIFO/RR/normal/batch/idle scheduling, priorities, CPU affinity, nice,
-  RT CPU runtime limits and reset-on-fork. PID 1 remains normally scheduled.
-- Local credential-checked control socket for status, poweroff and reboot.
-- Strict parsing: unsupported security/privilege directives fail validation.
-- LPM recipe, staged installation, host tests and QEMU/TCG boot CI.
+- Dependency ordered parallel services, timeouts, bounded restart policies,
+  per-service CPU policies, cgroup descendant cleanup and authenticated control.
+- `servicectl` enable/disable/status/start/stop/restart, including offline roots.
+- Native vendor units for filesystem, device, D-Bus, networking, SSH and getty
+  services; existing external daemons remain their providers.
+- Unix socket activation, descriptor handoff, service identities and /run directories.
+- `lilly-logd`, a credential-aware /dev/log datagram logger.
+- `lillyboot`, atomic ESP deployment/configuration and an optional GNU-EFI loader.
+- Disposable PID 1 and OVMF firmware boot tests. Experimental, not a complete
+  systemd/logind/homed replacement or a hard real-time guarantee.
 
 ## Build and try
 
@@ -56,18 +49,12 @@ lilly init [UNIT_DIRECTORY]                 # PID 1 only
 lilly ctl SOCKET {status|stop|poweroff|reboot}
 ```
 
-PID 1 defaults to `/etc/lilly/services`. Every `.service` in that directory is
-selected. Outside PID 1 the directory is explicit. An optional SERVICE selects
-only that service and its Requires closure. After orders selected units without
-pulling them in; Requires does not imply After. `Type=simple` means successful
-exec, not application readiness. There is no notify/socket activation yet.
+PID 1 loads /etc/lilly/system overrides and /usr/lib/lilly/system vendor units,
+selecting /etc/lilly/enabled markers and their Requires closure. The legacy
+/etc/lilly/services directory, when present, retains select-all behavior.
+Explicit `lilly run DIRECTORY` also selects that directory's units. Simple
+services are considered started after exec, not application readiness.
 
-Service files are trusted administrator code. Foreground services inherit the
-caller's credentials, environment, working directory and output. User/Group,
-sandboxing and privilege dropping are not implemented; unsupported directives
-are rejected. Do not run untrusted units as root. CPU controls are not a security
-sandbox or a hard real-time latency guarantee.
-
-Read [PID 1 setup and VM tests](docs/PID1.md),
-[scheduling](docs/SCHEDULING.md), [compatibility](docs/COMPATIBILITY.md),
-[architecture](docs/ARCHITECTURE.md) and [remaining work](docs/ROADMAP.md).
+Read [service administration](docs/SERVICES.md), [Lillyboot](docs/LILLYBOOT.md),
+[PID 1 setup](docs/PID1.md), [scheduling](docs/SCHEDULING.md),
+[compatibility](docs/COMPATIBILITY.md) and [validation](docs/VALIDATION.md).

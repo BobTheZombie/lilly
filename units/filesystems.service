@@ -1,0 +1,7 @@
+[Unit]
+Description=Mount fstab filesystems (review fstab and root/initramfs policy first)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/mount -a
+TimeoutStartSec=90

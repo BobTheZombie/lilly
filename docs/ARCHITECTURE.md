@@ -50,3 +50,13 @@ LPM. Lilly manages runtime lifecycle. An init activation transaction must retain
 a bootable previous option and regenerate the matching initramfs; merely creating
 an init symlink is insufficient. Kernel/ESP hooks must select an actual provider
 and must not assume systemctl is the only available implementation.
+
+## Administration and firmware
+
+servicectl owns persistent enabled markers and authenticated runtime requests.
+fsutil uses directory descriptors, no-follow traversal, bounded regular-file
+reads and atomic publication. lillyboot uses it for root-confined ESP generation;
+EFI/main.c independently runs in firmware and loads the selected Linux image.
+The log daemon consumes an inherited Unix datagram listener and peer credentials.
+Service identities resolve existing accounts before dropping all IDs; account
+creation and global tmpfiles processing remain separate future utilities.

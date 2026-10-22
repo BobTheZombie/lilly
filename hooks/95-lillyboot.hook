@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Path
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/lilly/efi/lillybootx64.efi
+
+[Action]
+Description = Updating Lillyboot kernel entries...
+When = PostTransaction
+Exec = /usr/libexec/lilly/boot-update

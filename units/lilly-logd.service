@@ -1,0 +1,12 @@
+[Unit]
+Description=Lilly local syslog writer
+Requires=filesystems.service lilly-logd.socket
+After=filesystems.service lilly-logd.socket
+StartLimitBurst=5
+StartLimitIntervalSec=30
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/lilly-logd /var/log/lilly.log
+Restart=on-failure
+RestartSec=1

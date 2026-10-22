@@ -1,0 +1,9 @@
+#!/bin/sh
+# Explicit opt-in; bootloader selection is independent of the running init.
+set -eu
+[ -f /etc/lilly/bootloader ] || exit 0
+[ "$(cat /etc/lilly/bootloader)" = lillyboot ] || exit 0
+findmnt -rn -M /boot/efi -t vfat >/dev/null || mount /boot/efi
+# The existing kernel/initramfs hook must run first and supply matching images.
+lillyboot --esp /boot/efi install --efi /usr/lib/lilly/efi/lillybootx64.efi
+exec lillyboot --esp /boot/efi update --set-default

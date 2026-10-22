@@ -8,8 +8,9 @@ boot entry while validating a machine-specific root filesystem and initramfs.
 ## Supported boot contract
 
 Run `/usr/bin/lilly` as PID 1 with no arguments, or `lilly init [UNIT_DIRECTORY]`.
-The default directory is `/etc/lilly/services`; every `.service` there is enabled.
-The directory must contain at least one valid service. `lilly init` refuses to
+The native catalog is /etc/lilly/system plus /usr/lib/lilly/system, selected by
+/etc/lilly/enabled markers. If the legacy /etc/lilly/services directory exists,
+its select-all behavior takes precedence. Explicit UNIT_DIRECTORY uses legacy mode. `lilly init` refuses to
 run outside PID 1. There is no implicit loading of systemd vendor services.
 
 Lilly expects a usable root filesystem, executable and ELF loader already
@@ -46,8 +47,8 @@ The socket is Unix SOCK_SEQPACKET, created under a private directory. Requests
 are authorized using SO_PEERCRED: root only for PID 1, the supervisor's effective
 UID in foreground mode. The socket path is never overwritten. Clients have a
 one-second request deadline and a bounded 16-client pending pool; idle clients
-do not block PID 1. Control clients time out after five seconds. There is no
-start/stop-single-unit/reload API yet. Foreground tests can set
+do not block PID 1. Control clients time out after five seconds. servicectl implements per-unit start/stop/restart and persistent enable/disable.
+Live catalog reload is not implemented. See SERVICES.md. Foreground tests can set
 `LILLY_CONTROL_SOCKET` explicitly and use the `stop` action to exit the supervisor.
 PID 1 rejects `stop` because it must not exit.
 

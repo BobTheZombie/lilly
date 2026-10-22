@@ -1,0 +1,8 @@
+[Unit]
+Description=Local syslog datagram socket
+
+[Socket]
+ListenDatagram=/dev/log
+SocketMode=0666
+Service=lilly-logd.service
+Accept=no

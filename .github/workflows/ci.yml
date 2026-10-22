@@ -23,13 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install VM dependencies
-        run: sudo apt-get update && sudo apt-get install -y meson ninja-build qemu-system-x86 busybox-static linux-image-generic
+        run: sudo apt-get update && sudo apt-get install -y meson ninja-build qemu-system-x86 busybox-static linux-image-generic gnu-efi ovmf
       - name: Configure QEMU tests
         run: |
           kernel=$(find /boot -maxdepth 1 -name 'vmlinuz-*' | sort -V | tail -n1)
           test -n "$kernel"
           sudo chmod a+r "$kernel"
-          meson setup build -Dvm_tests=true -Dvm_kernel="$kernel" -Dvm_busybox="$(command -v busybox)"
+          meson setup build -Dvm_tests=true -Dvm_kernel="$kernel" -Dvm_busybox="$(command -v busybox)" \
+            -Defi=true -Defi_vm_tests=true \
+            -Dovmf_code=/usr/share/OVMF/OVMF_CODE_4M.fd -Dovmf_vars=/usr/share/OVMF/OVMF_VARS_4M.fd
       - run: meson compile -C build
       - run: meson test -C build --print-errorlogs
       - uses: actions/upload-artifact@v4

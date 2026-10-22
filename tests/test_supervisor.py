@@ -44,8 +44,20 @@ class SupervisorTests(unittest.TestCase):
         self.unit('a', unit='After=missing.service')
         self.assertEqual(self.call().returncode, 0)
     def test_fail_closed(self):
-        self.unit('a', service='Type=oneshot\nUser=root')
+        self.unit('a', service='Type=oneshot\nProtectHome=true')
         self.assertIn('unsupported', self.call().stderr)
+    def test_socket_requires_real_service(self):
+        (self.root / 'test.socket').write_text('[Socket]\nListenStream=/run/lilly-test\n')
+        self.assertNotEqual(self.call('verify').returncode, 0)
+    def test_multiple_sockets_for_service_rejected(self):
+        self.unit('worker')
+        for name in ('first', 'second'):
+            (self.root / (name + '.socket')).write_text(
+                '[Socket]\nListenStream=/run/' + name + '\nService=worker.service\n')
+        self.assertNotEqual(self.call('verify').returncode, 0)
+    def test_runtime_directory_traversal_rejected(self):
+        self.unit('a', service='Type=oneshot\nRuntimeDirectory=../escape')
+        self.assertNotEqual(self.call('verify').returncode, 0)
     def test_exec_failure(self):
         self.unit('a', '/nonexistent/lilly-test')
         r = self.call()

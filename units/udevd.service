@@ -1,0 +1,10 @@
+[Unit]
+Description=External eudev daemon
+Requires=filesystems.service
+After=filesystems.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/udevd
+Restart=on-failure
+RestartSec=1

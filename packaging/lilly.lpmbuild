@@ -1,22 +1,23 @@
 #!/bin/bash
 # Experimental system manager. Installation does not switch the active init.
 NAME="lilly"
-VERSION="0.2.0"
+VERSION="0.3.0"
 RELEASE="1"
 ARCH="${ARCH:-x86_64}"
-SUMMARY="Lilly experimental PID 1 and service supervisor"
+SUMMARY="Lilly PID 1, socket activation, service control and EFI bootloader"
 URL="https://github.com/BobTheZombie/lilly"
 LICENSE=("MIT")
 SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
 SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
 PATCHES=()
 REQUIRES=("glibc")
-BUILD_REQUIRES=("gcc" "meson" "ninja" "python")
-PROVIDES=("lilly")
+BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils")
+if [ "$ARCH" = x86_64 ]; then BUILD_REQUIRES+=("gnu-efi"); fi
+PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd")
 CONFLICTS=()
 OBSOLETES=()
 RECOMMENDS=()
-SUGGESTS=()
+SUGGESTS=("eudev" "dbus" "networkmanager" "openssh" "util-linux")
 BUILD_OPTIONS=("@--stripping" "@--optimize=2")
 prepare() {
     set -euxo pipefail
@@ -30,8 +31,10 @@ prepare() {
 build() {
     set -euxo pipefail
     cd "$SRCROOT/$NAME-$VERSION"
-    meson setup build --prefix=/usr --libdir=lib \
-        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false
+    local efi=false
+    if [ "$ARCH" = x86_64 ]; then efi=true; fi
+    meson setup build --prefix=/usr --libdir=lib --libexecdir=/usr/libexec --sysconfdir=/etc \
+        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Defi="$efi"
     meson compile -C build -j "${LPM_BUILD_JOBS:-$(nproc)}"
 }
 check() {
@@ -44,6 +47,10 @@ staging() {
     cd "$SRCROOT/$NAME-$VERSION"
     meson install -C build --no-rebuild --destdir "$pkgdir"
     test -x "$pkgdir/usr/bin/lilly"
+    test -x "$pkgdir/usr/bin/servicectl"
+    test -x "$pkgdir/usr/bin/lillyboot"
+    test -x "$pkgdir/usr/bin/lilly-logd"
+    if [ "$ARCH" = x86_64 ]; then test -s "$pkgdir/usr/lib/lilly/efi/lillybootx64.efi"; fi
     test ! -e "$pkgdir/sbin/init"
     test ! -e "$pkgdir/usr/bin/systemctl"
 }

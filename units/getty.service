@@ -1,0 +1,10 @@
+[Unit]
+Description=Serial console login using the external PAM-enabled login program
+Requires=filesystems.service
+After=filesystems.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/agetty --noclear --keep-baud 115200,38400,9600 ttyS0 linux
+Restart=always
+RestartSec=2

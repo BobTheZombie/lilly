@@ -9,28 +9,26 @@ or a protocol capability until it implements and tests that contract.
 | Service units | Small explicit subset | Document each supported directive; reject unknown sections and directives |
 | PID 1 | Experimental QEMU-tested boot, persistence, shutdown and emergency mode | Reap all children; survive failures; early mounts, rescue, shutdown and switch-root tested in a VM |
 | cgroup v2 | Per-service descendant ownership/kill in PID 1; resource controllers pending | Per-service lifecycle ownership and cleanup, resource controls |
-| Notify/socket activation | Planned | Documented sd_notify and LISTEN_FDS interoperability, without requiring libsystemd |
+| Notify/socket activation | Unix one-listener socket activation implemented; notify planned | Documented sd_notify and LISTEN_FDS interoperability, without requiring libsystemd |
 | sysusers.d | Planned lilly-sysusers | Stable IDs, locking, atomic account updates, administrator precedence, offline root |
 | tmpfiles.d | Planned lilly-tmpfiles | Explicit supported types, no symlink traversal, root confinement, safe cleanup semantics |
 | PAM/login/session | Planned | PAM-backed login, seat/session ownership, shutdown inhibitors; use elogind until equivalent coverage exists |
 | NSS/userdb | Planned lilly-userdb | NSS interoperability, documented user/group JSON and Varlink protocols |
 | Managed homes | Planned lilly-homed | PAM activation, account records, encryption/recovery, safe unmounting and credential handling |
-| UEFI/boot | Planned lilly-boot | BLS Type 1 entries/UKIs, ESP at /boot/efi, atomic updates, Secure Boot preservation and explicit EFI variable changes |
+| UEFI/boot | x86-64 GNU-EFI Lillyboot and atomic generation implemented; UKI/signing/NVRAM tools pending | BLS Type 1 entries/UKIs, ESP at /boot/efi, atomic updates, Secure Boot preservation and explicit EFI variable changes |
 | udev/device management | External | Reuse eudev or another compatible provider; no fake libudev capability |
 | D-Bus | External | dbus-broker/dbus-daemon; logind and other desktop APIs require actual implementations |
 | Power management | External | Retain UPower and power-profiles-daemon integration; do not duplicate their policy |
 | LPM hooks | Packaging contract | Existing libalpm-compatible trigger syntax; vendor /usr/share/liblpm/hooks, helpers /usr/libexec/lpm/hooks, admin /etc/lpm/hooks |
 
-The development package installs `/usr/bin/lilly`, documentation and an
-example. It does not own `/sbin/init`, `systemctl`, `bootctl`, reboot/halt links,
-systemd files, PAM policy, sysusers/tmpfiles files or transaction hook names.
-A future separate activation package must make the init-provider switch explicit
-and reversible. Bootloader choice must remain independent of PID 1 choice.
+The package installs lilly, servicectl, lillyboot, lilly-logd, disabled native
+units and an opt-in LPM boot hook. Optional EFI builds install Lilly's private
+firmware artifact. It does not own /sbin/init, systemctl, bootctl or other init
+providers' files. Activation and firmware registration remain explicit.
 
-The current parser rejects User, Group, Environment, ExecStop, forking/notify
-services, sandbox directives, target units, includes, drop-ins, specifiers,
-continuations and command prefixes. Silently ignoring these could run services
-with incorrect security settings. No existing vendor directory is read by
-default. After of an absent/unselected unit has no ordering effect. Hard
-requirements must exist. Runtime Requires failure propagation is implemented. Full readiness, availability
-semantics and live reconfiguration remain future work; see PID1.md and SCHEDULING.md.
+User, Group and a single RuntimeDirectory are supported. Existing accounts are
+required. Unsupported Environment, ExecStop, notify/forking, sandbox directives,
+targets, drop-ins, specifiers and command prefixes fail validation. Native
+catalog overrides and enablement are described in SERVICES.md; editing that
+catalog requires a manager restart/reboot. After does not pull dependencies in.
+CPU policies are not a security sandbox. Full desktop APIs remain future work.

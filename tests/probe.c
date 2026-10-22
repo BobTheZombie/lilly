@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 #define _GNU_SOURCE
 #include <sched.h>
+#include <poll.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -43,7 +44,26 @@ static int control_test(void) {
     if(!WIFEXITED(status) || WEXITSTATUS(status)) return 1;
     puts("LILLY_CONTROL_AUTH_OK"); return 0;
 }
+static int echo_service(void) {
+    const char *pid=getenv("LISTEN_PID"),*fds=getenv("LISTEN_FDS");
+    if(!pid||strtol(pid,NULL,10)!=getpid()||!fds||strcmp(fds,"1"))return 1;
+    struct pollfd p={.fd=3,.events=POLLIN};if(poll(&p,1,3000)<=0)return 1;
+    int c=accept(3,NULL,NULL);if(c<0)return 1;
+    ssize_t n=send(c,"activated",9,MSG_NOSIGNAL);close(c);return n!=9;
+}
+static int socket_client(const char *path,int datagram) {
+    int fd=socket(AF_UNIX,datagram?SOCK_DGRAM:SOCK_STREAM,0);if(fd<0)return 1;
+    struct sockaddr_un a={.sun_family=AF_UNIX};if(strlen(path)>=sizeof a.sun_path)return 1;strcpy(a.sun_path,path);
+    struct timeval t={.tv_sec=3};setsockopt(fd,SOL_SOCKET,SO_RCVTIMEO,&t,sizeof t);
+    if(connect(fd,(struct sockaddr *)&a,sizeof a))return 1;
+    if(datagram){ssize_t n=send(fd,"LILLY_SYSLOG_TEST",17,MSG_NOSIGNAL);close(fd);return n!=17;}
+    char response[32];ssize_t n=recv(fd,response,sizeof response,0);close(fd);
+    return n!=9||memcmp(response,"activated",9);
+}
 int main(int argc, char **argv) {
+    if(argc==2&&!strcmp(argv[1],"socket-echo"))return echo_service();
+    if(argc==3&&!strcmp(argv[1],"socket-client"))return socket_client(argv[2],0);
+    if(argc==3&&!strcmp(argv[1],"log-send"))return socket_client(argv[2],1);
     if (argc==2 && !strcmp(argv[1],"control-test")) return control_test();
     if (argc==2 && !strcmp(argv[1],"spin")) {
         volatile unsigned long n=0; for(;;) n++;
