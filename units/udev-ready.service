@@ -1,0 +1,9 @@
+[Unit]
+Description=Wait for the udev control protocol to respond
+Requires=udevd.service
+After=udevd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/lilly-devices --timeout 30 ready
+TimeoutStartSec=35

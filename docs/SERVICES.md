@@ -40,7 +40,7 @@ LISTEN_FDNAMES. Existing socket paths are never overwritten. Stopping a socket
 also stops its activated service. TCP, Accept=yes and multiple listener handoff
 are not supported.
 
-Vendor units cover fstab mounts, eudev, device triggering, D-Bus, NetworkManager,
+Vendor units cover fstab mounts, eudev, device coldplug/readiness, D-Bus, NetworkManager,
 OpenSSH and a serial getty. Their actual binaries, accounts, PAM configuration,
 SSH keys, fstab and networking configuration must be supplied by their packages
 and reviewed locally. dbus.service uses the LPM account dbus. These are native
@@ -51,3 +51,10 @@ lilly-logd is the included C logging daemon. lilly-logd.socket receives Unix
 escaped control characters in /var/log/lilly.log. SIGHUP reopens the output for
 external log rotation. This is not the journald API and does not implement
 journal queries, automatic rotation or persistent rate quotas.
+
+Device startup now passes an acknowledged control readiness barrier and a
+subsystem/device trigger plus queue settle before dependent networking starts.
+See DEVICES.md for the configured provider contract. console-getty.service
+adds a tty1 login through util-linux; swap.service activates fstab swap.
+pam_lilly is available for the existing login/su/runuser/sshd PAM session stacks;
+no authentication policy is overwritten or auto-enabled.

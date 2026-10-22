@@ -5,6 +5,6 @@ After=filesystems.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/agetty --noclear --keep-baud 115200,38400,9600 ttyS0 linux
+ExecStart=/usr/bin/agetty --noclear --login-program /usr/bin/login --keep-baud 115200,38400,9600 ttyS0 linux
 Restart=always
 RestartSec=2

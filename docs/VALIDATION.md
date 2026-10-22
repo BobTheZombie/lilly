@@ -1,4 +1,4 @@
-# Validation: 0.3.0 development milestone
+# Validation: 0.4.0 development milestone
 
 Validated on 2026-10-22 using GCC 13.3.0, Meson 1.12.1, Ninja 1.13.2,
 QEMU 8.2.2 TCG and Linux 6.8.0-138-generic as the disposable guest kernel.
@@ -59,3 +59,32 @@ with -Defi=true -Defi_vm_tests=true -Dovmf_code=/path/to/OVMF_CODE_4M.fd
 uses a disposable FAT directory, never the machine's ESP. Static VM binaries
 allow glibc NSS linker warnings; deployed native binaries remain dynamically
 linked and warnings-as-errors applies to their compilation/linking.
+
+## Device/PAM integration milestone
+
+Seven native provider-adapter tests cover command order, failed-trigger short
+circuiting, deadline termination, missing executables, literal argv forwarding,
+argument validation and foreground daemon execution. The PAM fixture requires
+root and audit netlink; on restricted hosts it reports a skip.
+
+The independent devices-pam-vm case runs a real systemd-udevd/udevadm 255 provider
+with Linux-PAM 1.5.3 and util-linux runuser, under Lilly PID 1. It tests real
+virtio disk coldplug, rule properties/symlinks, rule reload, PCI hot-removal and
+symlink cleanup; concurrent PAM sessions, metadata escaping, environment, private
+runtime permissions, close/pam_end cleanup and symlink rejection; then a real
+runuser nobody login and clean shutdown. No host device daemon, account policy
+or device is changed. This validates this provider/version, not all eudev builds
+or complete systemd-udevd/logind compatibility.
+
+To enable this additional guest, use -Dpam=enabled -Ddevice_vm_tests=true with
+the existing vm_tests/kernel/busybox options and set vm_udevd/vm_udevadm to trusted
+matching installed provider executables. The fixture copies their dynamic
+libraries plus installed PAM modules/runuser. A kernel with built-in virtio PCI
+and virtio block support is required; no host kernel modules are reused.
+
+0.4 verification: native GCC and UBSan suites passed (seven device-adapter
+cases plus prior supervisor/administration suites; PAM and two Unix-socket
+cases skip under this restricted host). All five existing PID 1 guests and the
+new real-provider/PAM/util-linux guest passed. The OVMF EFI regression also
+passed. Staged installation includes pam_lilly.so with exported session entry
+points and a valid native catalog, with no active PAM-policy or init replacement.

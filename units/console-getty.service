@@ -1,0 +1,10 @@
+[Unit]
+Description=Virtual console login through util-linux and its PAM login policy
+Requires=filesystems.service
+After=filesystems.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/agetty --noclear --login-program /usr/bin/login tty1 linux
+Restart=always
+RestartSec=2

@@ -13,14 +13,19 @@
    atomic boot generation and a real QEMU/OVMF-tested x86-64 EFI loader.
    Next: notify readiness, live catalog reload, resource controllers, broader
    sandbox policy and real-root/storage integration tests.
-4. **lilly-sysusers and lilly-tmpfiles.** Implement documented compatible subsets,
+4. **Implemented integration: devices and PAM sessions.** Bounded provider
+   lifecycle/readiness/coldplug, actual rule/reload/removal VM tests, private runtime
+   directories and concurrent PAM session tracking, util-linux runuser/console
+   login integration. A new udev rule engine, logind/seats and user managers are
+   not implemented.
+5. **lilly-sysusers and lilly-tmpfiles.** Implement documented compatible subsets,
    offline root, precedence, locking, transactional writes and hostile path tests.
-5. **Desktop compatibility.** Notify/socket activation, D-Bus service lifecycle,
+6. **Desktop compatibility.** Notify/socket activation, D-Bus service lifecycle,
    PAM login integration, elogind interoperability, UPower and
    power-profiles-daemon. Reuse device/network daemons rather than invent shims.
-6. **lilly-userdb and lilly-homed.** NSS, Varlink, JSON records and PAM contracts;
+7. **lilly-userdb and lilly-homed.** NSS, Varlink, JSON records and PAM contracts;
    encrypted managed homes only after recovery/security design and testing.
-7. **Further Lillyboot work.** UKIs, signing workflow, explicit EFI variable
+8. **Further Lillyboot work.** UKIs, signing workflow, explicit EFI variable
    handling, hardware coverage and generation cleanup. Keep systemd-boot and
    other bootloader options available regardless of selected init provider.
 

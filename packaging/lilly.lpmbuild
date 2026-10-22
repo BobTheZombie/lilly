@@ -1,7 +1,7 @@
 #!/bin/bash
 # Experimental system manager. Installation does not switch the active init.
 NAME="lilly"
-VERSION="0.3.0"
+VERSION="0.4.0"
 RELEASE="1"
 ARCH="${ARCH:-x86_64}"
 SUMMARY="Lilly PID 1, socket activation, service control and EFI bootloader"
@@ -10,10 +10,10 @@ LICENSE=("MIT")
 SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
 SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
 PATCHES=()
-REQUIRES=("glibc")
-BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils")
+REQUIRES=("glibc" "pam")
+BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils" "pam")
 if [ "$ARCH" = x86_64 ]; then BUILD_REQUIRES+=("gnu-efi"); fi
-PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd")
+PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd" "lilly-devices" "lilly-sessions")
 CONFLICTS=()
 OBSOLETES=()
 RECOMMENDS=()
@@ -34,7 +34,7 @@ build() {
     local efi=false
     if [ "$ARCH" = x86_64 ]; then efi=true; fi
     meson setup build --prefix=/usr --libdir=lib --libexecdir=/usr/libexec --sysconfdir=/etc \
-        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Defi="$efi"
+        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Dpam=enabled -Defi="$efi"
     meson compile -C build -j "${LPM_BUILD_JOBS:-$(nproc)}"
 }
 check() {
@@ -51,6 +51,9 @@ staging() {
     test -x "$pkgdir/usr/bin/lillyboot"
     test -x "$pkgdir/usr/bin/lilly-logd"
     if [ "$ARCH" = x86_64 ]; then test -s "$pkgdir/usr/lib/lilly/efi/lillybootx64.efi"; fi
+    test -s "$pkgdir/usr/lib/security/pam_lilly.so"
+    test -x "$pkgdir/usr/bin/lilly-devices"
+    test -x "$pkgdir/usr/bin/lilly-sessions"
     test ! -e "$pkgdir/sbin/init"
     test ! -e "$pkgdir/usr/bin/systemctl"
 }

@@ -10,7 +10,7 @@ jobs:
         compiler: [gcc, clang]
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y meson ninja-build
+      - run: sudo apt-get update && sudo apt-get install -y meson ninja-build libpam0g-dev
       - run: CC=${{ matrix.compiler }} meson setup build --prefix=/usr
       - run: meson compile -C build
       - run: meson test -C build --print-errorlogs
@@ -23,14 +23,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install VM dependencies
-        run: sudo apt-get update && sudo apt-get install -y meson ninja-build qemu-system-x86 busybox-static linux-image-generic gnu-efi ovmf
+        run: sudo apt-get update && sudo apt-get install -y meson ninja-build qemu-system-x86 busybox-static linux-image-generic gnu-efi ovmf libpam0g-dev udev libpam-modules util-linux
       - name: Configure QEMU tests
         run: |
           kernel=$(find /boot -maxdepth 1 -name 'vmlinuz-*' | sort -V | tail -n1)
           test -n "$kernel"
           sudo chmod a+r "$kernel"
           meson setup build -Dvm_tests=true -Dvm_kernel="$kernel" -Dvm_busybox="$(command -v busybox)" \
-            -Defi=true -Defi_vm_tests=true \
+            -Defi=true -Defi_vm_tests=true -Dpam=enabled -Ddevice_vm_tests=true \
+            -Dvm_udevd=/usr/lib/systemd/systemd-udevd -Dvm_udevadm="$(command -v udevadm)" \
             -Dovmf_code=/usr/share/OVMF/OVMF_CODE_4M.fd -Dovmf_vars=/usr/share/OVMF/OVMF_VARS_4M.fd
       - run: meson compile -C build
       - run: meson test -C build --print-errorlogs

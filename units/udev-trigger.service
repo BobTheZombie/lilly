@@ -1,8 +1,9 @@
 [Unit]
-Description=Request device discovery
-Requires=udevd.service
-After=udevd.service
+Description=Coldplug subsystems and devices and drain the udev queue
+Requires=udev-ready.service
+After=udev-ready.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/udevadm trigger --action=add
+ExecStart=/usr/bin/lilly-devices --timeout 120 coldplug
+TimeoutStartSec=125

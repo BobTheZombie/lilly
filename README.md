@@ -3,7 +3,7 @@
 **Linux Init, Login & Lifecycle System** — a modular Linux system manager in C,
 started for LPM Linux, with Linux interfaces intended for other distributions.
 
-**0.3.0 implements experimental PID 1 supervision, service administration,
+**0.4.0 implements experimental PID 1 supervision, service administration,
 Unix socket activation, logging and a real x86-64 UEFI bootloader.** Meson/Ninja
 build all programs. Installing the package does not change the active init or
 bootloader and does not enable services. LPM multi-init choices remain available.
@@ -14,6 +14,8 @@ bootloader and does not enable services. LPM multi-init choices remain available
 - Native vendor units for filesystem, device, D-Bus, networking, SSH and getty
   services; existing external daemons remain their providers.
 - Unix socket activation, descriptor handoff, service identities and /run directories.
+- Bounded udev readiness/coldplug/control integration with an actual provider.
+- Linux-PAM session module and util-linux console login/swap units.
 - `lilly-logd`, a credential-aware /dev/log datagram logger.
 - `lillyboot`, atomic ESP deployment/configuration and an optional GNU-EFI loader.
 - Disposable PID 1 and OVMF firmware boot tests. Experimental, not a complete
@@ -55,6 +57,6 @@ selecting /etc/lilly/enabled markers and their Requires closure. The legacy
 Explicit `lilly run DIRECTORY` also selects that directory's units. Simple
 services are considered started after exec, not application readiness.
 
-Read [service administration](docs/SERVICES.md), [Lillyboot](docs/LILLYBOOT.md),
+Read [device/PAM integration](docs/DEVICES.md), [service administration](docs/SERVICES.md), [Lillyboot](docs/LILLYBOOT.md),
 [PID 1 setup](docs/PID1.md), [scheduling](docs/SCHEDULING.md),
 [compatibility](docs/COMPATIBILITY.md) and [validation](docs/VALIDATION.md).

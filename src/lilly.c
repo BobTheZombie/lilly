@@ -735,7 +735,7 @@ int main(int argc, char **argv) {
     pid1 = getpid() == 1;
     if (pid1) platform_early();
     if (atexit(cleanup)) die("atexit failed");
-    if (!pid1 && argc == 2 && !strcmp(argv[1], "--version")) { puts("lilly 0.3.0-dev"); return 0; }
+    if (!pid1 && argc == 2 && !strcmp(argv[1], "--version")) { puts("lilly 0.4.0-dev"); return 0; }
     if (!pid1 && argc == 2 && !strcmp(argv[1], "--help")) {
         puts("Usage: lilly {verify|plan|run} UNIT_DIRECTORY [SERVICE]\nUse lilly init [UNIT_DIRECTORY] as PID 1; lilly ctl SOCKET {status|stop|poweroff|reboot}."); return 0;
     }

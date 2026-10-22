@@ -1,0 +1,5 @@
+# Add to the existing PAM session stack for login, sshd, su and runuser.
+# Authentication/account/password policy remains owned by those packages.
+# Use one session owner: do not combine with pam_systemd/pam_elogind until an
+# administrator has chosen their session/runtime-directory policy explicitly.
+session optional pam_lilly.so

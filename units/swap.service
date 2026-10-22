@@ -1,0 +1,9 @@
+[Unit]
+Description=Activate configured fstab swap using util-linux
+Requires=filesystems.service udev-trigger.service
+After=filesystems.service udev-trigger.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/swapon --all
+TimeoutStartSec=90
