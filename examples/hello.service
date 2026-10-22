@@ -1,0 +1,6 @@
+[Unit]
+Description=Lilly development supervisor demonstration
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/printf 'Hello from Lilly\n'

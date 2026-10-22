@@ -1,0 +1,16 @@
+name: C build and lifecycle tests
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+    steps:
+      - uses: actions/checkout@v4
+      - run: make CC=${{ matrix.compiler }} check
+      - run: make DESTDIR="$PWD/stage" install
+      - run: test -x stage/usr/bin/lilly && test ! -e stage/sbin/init
+      - run: make clean && make CC=${{ matrix.compiler }} CFLAGS='-O1 -g -fsanitize=undefined' LDFLAGS='-fsanitize=undefined' check

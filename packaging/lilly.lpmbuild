@@ -1,0 +1,46 @@
+#!/bin/bash
+# Development tools only. Does not activate Lilly as PID 1.
+NAME="lilly"
+VERSION="0.1.0"
+RELEASE="1"
+ARCH="${ARCH:-x86_64}"
+SUMMARY="Lilly C service supervisor development foundation"
+URL="https://github.com/BobTheZombie/lilly"
+LICENSE=("MIT")
+SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
+SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
+PATCHES=()
+REQUIRES=("glibc")
+BUILD_REQUIRES=("gcc" "make" "python")
+PROVIDES=("lilly")
+CONFLICTS=()
+OBSOLETES=()
+RECOMMENDS=()
+SUGGESTS=()
+BUILD_OPTIONS=("@--stripping" "@--optimize=2")
+prepare() {
+    set -euxo pipefail
+    if [ ! -d "$SRCROOT/$NAME-$VERSION" ] && [ -d "$SRCROOT/lilly-main" ]; then
+        mv "$SRCROOT/lilly-main" "$SRCROOT/$NAME-$VERSION"
+    fi
+    cd "$SRCROOT/$NAME-$VERSION"
+    test -f src/lilly.c
+}
+build() {
+    set -euxo pipefail
+    cd "$SRCROOT/$NAME-$VERSION"
+    make -j"${LPM_BUILD_JOBS:-$(nproc)}"
+}
+check() {
+    set -euxo pipefail
+    cd "$SRCROOT/$NAME-$VERSION"
+    make check
+}
+staging() {
+    set -euxo pipefail
+    cd "$SRCROOT/$NAME-$VERSION"
+    make DESTDIR="$pkgdir" PREFIX=/usr install
+    test -x "$pkgdir/usr/bin/lilly"
+    test ! -e "$pkgdir/sbin/init"
+    test ! -e "$pkgdir/usr/bin/systemctl"
+}
