@@ -1,0 +1,8 @@
+[Unit]
+Description=Request device discovery
+Requires=udevd.service
+After=udevd.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/udevadm trigger --action=add

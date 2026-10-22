@@ -1,0 +1,5 @@
+option('tests', type: 'boolean', value: true, description: 'Build/run ordinary process lifecycle tests')
+option('vm_tests', type: 'boolean', value: false, description: 'Build static PID 1 fixtures and enable QEMU boot tests')
+option('vm_kernel', type: 'string', value: '', description: 'Linux x86-64 kernel image for QEMU')
+option('vm_busybox', type: 'string', value: '', description: 'Static BusyBox executable for the guest')
+option('vm_qemu', type: 'string', value: 'qemu-system-x86_64', description: 'QEMU program for boot tests')

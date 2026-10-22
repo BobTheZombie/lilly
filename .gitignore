@@ -1,4 +1,4 @@
-/build/
-/stage/
+/build*/
+/stage*/
 __pycache__/
 *.pyc

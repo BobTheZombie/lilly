@@ -1,0 +1,10 @@
+[Unit]
+Description=External system D-Bus daemon
+Requires=filesystems.service
+After=filesystems.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/dbus-daemon --system --nofork --nopidfile
+Restart=on-failure
+RestartSec=1

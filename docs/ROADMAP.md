@@ -1,13 +1,17 @@
 # Milestones
 
-1. **Current: C service-supervision foundation.** Parser, plan, foreground
-   supervisor, bounded restart, shutdown and executable integration tests.
-2. **Lifecycle completion.** cgroup v2, runtime Requires failure propagation,
-   reverse dependency stop ordering, timeouts, readiness, persistent status,
-   authenticated local control socket and lillyctl. Add parallel startup tests.
-3. **Bootable PID 1 in QEMU.** Early mounts, console, rescue, root handoff,
-   shutdown/reboot, filesystem sync/unmount, initramfs integration and CI boot
-   tests. Only then add a separate LPM init-provider activation package.
+1. **Implemented: C service-supervision foundation.** Strict parser, dependency
+   plan, parallel activation, bounded restarts, timeouts and runtime Requires
+   failure propagation.
+2. **Implemented: experimental PID 1 and CPU policy controls.** Early mounts,
+   console, cgroup v2, reaping, persistent event loop, emergency mode, authenticated
+   local control and shutdown/reboot. QEMU checks actual RR/affinity/reset-on-fork,
+   runaway RT budget, escaped-child cleanup, idle and broken-config persistence.
+3. **Next: complete lifecycle and machine integration.** Notify/socket activation,
+   readiness-aware dependency startup, per-unit start/stop/reload control, cgroup
+   resource controllers, environment/privilege/sandbox settings, installable
+   reviewed boot profiles, initramfs root handoff integration and more storage/
+   shutdown tests. Keep activation separate from package installation.
 4. **lilly-sysusers and lilly-tmpfiles.** Implement documented compatible subsets,
    offline root, precedence, locking, transactional writes and hostile path tests.
 5. **Desktop compatibility.** Notify/socket activation, D-Bus service lifecycle,

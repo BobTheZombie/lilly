@@ -1,17 +1,17 @@
 #!/bin/bash
-# Development tools only. Does not activate Lilly as PID 1.
+# Experimental system manager. Installation does not switch the active init.
 NAME="lilly"
-VERSION="0.1.0"
+VERSION="0.2.0"
 RELEASE="1"
 ARCH="${ARCH:-x86_64}"
-SUMMARY="Lilly C service supervisor development foundation"
+SUMMARY="Lilly experimental PID 1 and service supervisor"
 URL="https://github.com/BobTheZombie/lilly"
 LICENSE=("MIT")
 SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
 SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
 PATCHES=()
 REQUIRES=("glibc")
-BUILD_REQUIRES=("gcc" "make" "python")
+BUILD_REQUIRES=("gcc" "meson" "ninja" "python")
 PROVIDES=("lilly")
 CONFLICTS=()
 OBSOLETES=()
@@ -24,22 +24,25 @@ prepare() {
         mv "$SRCROOT/lilly-main" "$SRCROOT/$NAME-$VERSION"
     fi
     cd "$SRCROOT/$NAME-$VERSION"
+    test -f meson.build
     test -f src/lilly.c
 }
 build() {
     set -euxo pipefail
     cd "$SRCROOT/$NAME-$VERSION"
-    make -j"${LPM_BUILD_JOBS:-$(nproc)}"
+    meson setup build --prefix=/usr --libdir=lib \
+        --buildtype=release --wrap-mode=nodownload -Dvm_tests=false
+    meson compile -C build -j "${LPM_BUILD_JOBS:-$(nproc)}"
 }
 check() {
     set -euxo pipefail
     cd "$SRCROOT/$NAME-$VERSION"
-    make check
+    meson test -C build --no-rebuild --print-errorlogs
 }
 staging() {
     set -euxo pipefail
     cd "$SRCROOT/$NAME-$VERSION"
-    make DESTDIR="$pkgdir" PREFIX=/usr install
+    meson install -C build --no-rebuild --destdir "$pkgdir"
     test -x "$pkgdir/usr/bin/lilly"
     test ! -e "$pkgdir/sbin/init"
     test ! -e "$pkgdir/usr/bin/systemctl"

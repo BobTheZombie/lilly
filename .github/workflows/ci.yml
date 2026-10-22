@@ -1,4 +1,4 @@
-name: C build and lifecycle tests
+name: Meson C build and PID 1 tests
 on: [push, pull_request]
 permissions:
   contents: read
@@ -10,7 +10,30 @@ jobs:
         compiler: [gcc, clang]
     steps:
       - uses: actions/checkout@v4
-      - run: make CC=${{ matrix.compiler }} check
-      - run: make DESTDIR="$PWD/stage" install
+      - run: sudo apt-get update && sudo apt-get install -y meson ninja-build
+      - run: CC=${{ matrix.compiler }} meson setup build --prefix=/usr
+      - run: meson compile -C build
+      - run: meson test -C build --print-errorlogs
+      - run: meson install -C build --destdir "$PWD/stage"
       - run: test -x stage/usr/bin/lilly && test ! -e stage/sbin/init
-      - run: make clean && make CC=${{ matrix.compiler }} CFLAGS='-O1 -g -fsanitize=undefined' LDFLAGS='-fsanitize=undefined' check
+      - run: CC=${{ matrix.compiler }} meson setup build-ubsan -Db_sanitize=undefined
+      - run: meson test -C build-ubsan --print-errorlogs
+  boot:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install VM dependencies
+        run: sudo apt-get update && sudo apt-get install -y meson ninja-build qemu-system-x86 busybox-static linux-image-generic
+      - name: Configure QEMU tests
+        run: |
+          kernel=$(find /boot -maxdepth 1 -name 'vmlinuz-*' | sort -V | tail -n1)
+          test -n "$kernel"
+          sudo chmod a+r "$kernel"
+          meson setup build -Dvm_tests=true -Dvm_kernel="$kernel" -Dvm_busybox="$(command -v busybox)"
+      - run: meson compile -C build
+      - run: meson test -C build --print-errorlogs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lilly-boot-logs
+          path: build/vm-logs/

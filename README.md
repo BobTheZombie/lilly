@@ -1,31 +1,50 @@
 # LILLY
 
 **Linux Init, Login & Lifecycle System** — a modular Linux system manager in C,
-started for LPM Linux and intended to work on other Linux distributions.
+started for LPM Linux, with Linux interfaces intended for other distributions.
 
-Version 0.1.0-dev is the first development milestone: a real service parser,
-dependency planner and foreground process supervisor. **It is not yet a bootable
-PID 1 and must not replace `/sbin/init`.** `lilly run` explicitly refuses PID 1.
-There is no claim of systemd, logind, homed or bootctl drop-in compatibility.
+**0.2.0-dev implements experimental PID 1 boot and service scheduling.** It has
+disposable QEMU boot tests and ordinary process-lifecycle tests. It is not yet a
+production desktop replacement for systemd, logind or homed. Installing Lilly
+does not change the active init, bootloader, PAM policy or LPM transaction hooks.
+LPM's existing multi-init choices remain available.
 
-LPM supports multiple init systems. Lilly is another selectable provider;
-installing this package does not change the active init, systemd-boot, or hooks.
+## Implemented
+
+- PID 1 early mounts, console setup, cgroup v2 and orphan reaping.
+- PID 1 persistence after services finish; emergency wait/reaper on fatal errors.
+- Graceful dependency-ordered shutdown, deadlines, sync, unmount/read-only remount
+  attempts and real kernel poweroff/reboot.
+- Deterministic dependency planning with Requires selection, After ordering,
+  missing requirement errors and cycle detection.
+- Parallel nonblocking fork/exec activation and honest exec failure reporting.
+- Simple/oneshot services, configurable start/stop timeouts, bounded restart
+  windows and runtime hard-dependency failure propagation.
+- Per-service FIFO/RR/normal/batch/idle scheduling, priorities, CPU affinity, nice,
+  RT CPU runtime limits and reset-on-fork. PID 1 remains normally scheduled.
+- Local credential-checked control socket for status, poweroff and reboot.
+- Strict parsing: unsupported security/privilege directives fail validation.
+- LPM recipe, staged installation, host tests and QEMU/TCG boot CI.
 
 ## Build and try
 
-Linux, a C17 compiler and Make are required; Python 3 is used only for tests.
-The executable links only against libc. No shell interprets service commands.
+Linux, a C17 compiler, Meson (>=1.3) and Ninja are required. Python 3 is
+used by the build system and tests; it is not a runtime dependency of Lilly.
+The executable links only against libc. Service commands use explicit argv
+parsing, with no shell expansion unless an administrator explicitly runs a shell.
 
 ```sh
-make
-make check
-build/lilly verify examples
-build/lilly plan examples
-build/lilly run examples
-make DESTDIR="$PWD/stage" PREFIX=/usr install
+meson setup build --prefix=/usr
+meson compile -C build
+meson test -C build --print-errorlogs
+build/lilly verify examples/system
+build/lilly plan examples/system
+# Small foreground example (no host init change):
+mkdir -p /tmp/lilly-demo
+cp examples/hello.service /tmp/lilly-demo/
+build/lilly run /tmp/lilly-demo
+meson install -C build --destdir "$PWD/stage"
 ```
-
-Supported commands:
 
 ```text
 lilly --help
@@ -33,37 +52,22 @@ lilly --version
 lilly verify UNIT_DIRECTORY [SERVICE]
 lilly plan UNIT_DIRECTORY [SERVICE]
 lilly run UNIT_DIRECTORY [SERVICE]
+lilly init [UNIT_DIRECTORY]                 # PID 1 only
+lilly ctl SOCKET {status|stop|poweroff|reboot}
 ```
 
-Without SERVICE, every `.service` in the explicitly supplied directory is
-selected. With SERVICE, only that unit and its transitive `Requires` closure
-are selected. `After` orders selected units; it does not pull units in.
-`Requires` does not imply `After`. This is a deliberately small, documented
-subset of familiar unit syntax, not an importer for arbitrary systemd units.
+PID 1 defaults to `/etc/lilly/services`. Every `.service` in that directory is
+selected. Outside PID 1 the directory is explicit. An optional SERVICE selects
+only that service and its Requires closure. After orders selected units without
+pulling them in; Requires does not imply After. `Type=simple` means successful
+exec, not application readiness. There is no notify/socket activation yet.
 
-Service files are trusted administrator code. `run` executes services with the
-calling user's credentials and inherited environment, cwd and output streams.
-Use an ordinary account for development. Do not feed untrusted directories to
-root. Only foreground services are supported; daemonization and session/process
-group escapes are outside the current lifecycle contract.
+Service files are trusted administrator code. Foreground services inherit the
+caller's credentials, environment, working directory and output. User/Group,
+sandboxing and privilege dropping are not implemented; unsupported directives
+are rejected. Do not run untrusted units as root. CPU controls are not a security
+sandbox or a hard real-time latency guarantee.
 
-## Implemented
-
-- Strict parsing of `[Unit]` Description, Requires and After, and `[Service]`
-  Type=simple/oneshot, ExecStart and Restart=no/on-failure.
-- Deterministic dependency plans, missing hard dependency errors and cycle checks.
-- Absolute executable paths and a quoted argv tokenizer; no shell expansion.
-- Fork/exec error reporting through a close-on-exec pipe.
-- Linux signalfd/poll event loop, child reaping and subreaper registration.
-- Oneshot completion ordering and foreground service supervision.
-- Five starts maximum per invocation for on-failure services, 250ms retry delay.
-- SIGTERM/SIGINT shutdown: reverse-order process group TERM, KILL after 3 seconds.
-- LPM development package recipe, staged installation and CI.
-
-`Type=simple` means exec started, **not application readiness**. There is no
-notify protocol, socket activation, control socket, reload or service CLI yet.
-The supervisor exits once selected processes have completed and returns failure
-if a selected service failed. Output stays on the inherited stdout/stderr.
-
-Read [compatibility](docs/COMPATIBILITY.md), [architecture](docs/ARCHITECTURE.md)
-and the [implementation roadmap](docs/ROADMAP.md) before integration work.
+Read [PID 1 setup and VM tests](docs/PID1.md),
+[scheduling](docs/SCHEDULING.md), [compatibility](docs/COMPATIBILITY.md),
+[architecture](docs/ARCHITECTURE.md) and [remaining work](docs/ROADMAP.md).
