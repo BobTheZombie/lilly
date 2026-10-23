@@ -175,16 +175,14 @@ if get_option('native_engines')
   engine_fs = import('fs')
   engine_sources = get_option('engine_sources')
   if engine_sources == ''
-    error('Set engine_sources after tools/build_engines.py fetch for udev and logind')
+    error('Set engine_sources to the directory containing the vendored udev and logind trees')
   endif
   engine_build = meson.current_build_dir() / 'engines'
-  engine_inputs = files('tools/build_engines.py', 'engines/sources.json',
-    'engines/patches/udev-private-rules.patch', 'engines/patches/udev-private-hwdb.patch',
-    'engines/patches/logind-lilly-power.patch')
+  engine_inputs = files('tools/build_engines.py', 'engines/sources.json')
   engine_targets = {}
   foreach engine : ['udev', 'logind']
     if not engine_fs.is_file(engine_sources / engine / 'meson.build')
-      error('Missing pinned source checkout: ' + engine)
+      error('Missing vendored source tree: ' + engine)
     endif
     engine_target = custom_target('lilly-native-' + engine,
       depends: engine == 'logind' ? [engine_targets['udev']] : [],
@@ -192,7 +190,7 @@ if get_option('native_engines')
       command: [engine_python, files('tools/build_engines.py'), 'build',
         '--engine', engine, '--sources', engine_sources, '--build', engine_build,
         '--jobs', get_option('engine_jobs').to_string(), '--stamp', '@OUTPUT@'],
-      build_by_default: true, console: true)
+      build_by_default: true, build_always_stale: true, console: true)
     engine_targets += {engine: engine_target}
     meson.add_install_script(engine_python, files('tools/install_engines.py'), engine, engine_sources, engine_build)
   endforeach

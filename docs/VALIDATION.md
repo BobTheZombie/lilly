@@ -107,7 +107,7 @@ this guest.
 
 The PID 1 suite additionally checks Halt reaches RB_HALT_SYSTEM and the kernel's
 System halted state; QEMU is then stopped after observing that terminal state.
-This distinguishes Halt from PowerOff. Native-engine CI repeats source fetching,
-full build, stage, host tests and guest boot. Enable the extra guest with
+This distinguishes Halt from PowerOff. Native-engine CI repeats the full build,
+stage, host tests and guest boot directly from the tracked source trees. Enable the extra guest with
 -Dnative_engine_vm_tests=true -Dnative_engine_stage=/absolute/stage plus vm_tests
 options, and install into that staging directory before running it.

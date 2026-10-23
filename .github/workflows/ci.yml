@@ -51,16 +51,16 @@ jobs:
             libcap-dev libmount-dev libblkid-dev libkmod-dev libacl1-dev libaudit-dev \
             libseccomp-dev libpam0g-dev libpam-modules libpolkit-gobject-1-dev \
             dbus util-linux qemu-system-x86 busybox-static linux-image-generic
-      - name: Fetch pinned sources explicitly
+      - name: Verify vendored sources
         run: |
-          python3 tools/build_engines.py fetch --engine udev
-          python3 tools/build_engines.py fetch --engine logind
+          test -f vendor/udev/meson.build
+          test -f vendor/logind/meson.build
       - name: Configure native source profile
         run: |
           kernel=$(find /boot -maxdepth 1 -name 'vmlinuz-*' | sort -V | tail -n1)
           sudo chmod a+r "$kernel"
           meson setup build-full -Dpam=enabled -Dnative_engines=true -Dengine_jobs=2 \
-            -Dengine_sources="$PWD/build/engine-sources" -Dvm_tests=true \
+            -Dengine_sources="$PWD/vendor" -Dvm_tests=true \
             -Dvm_kernel="$kernel" -Dvm_busybox="$(command -v busybox)" \
             -Dnative_engine_vm_tests=true -Dnative_engine_stage="$PWD/stage-full"
       - run: meson compile -C build-full
