@@ -63,10 +63,10 @@ creation and global tmpfiles processing remain separate future utilities.
 
 ## Standalone engine sources
 
-The optional native_engines profile fetches immutable C source revisions only
-through an explicit build-driver command. Meson/Ninja builds complete device and
-login engines, applies reviewed Lilly integration patches, and installs private
-binaries/libraries/data through DESTDIR. The login engine's power helpers call
+The optional native_engines profile builds the tracked source snapshots in
+`vendor/udev` and `vendor/logind`. Meson/Ninja builds complete device and login
+engines and installs private binaries/libraries/data through DESTDIR. Lilly's
+integration changes live in those source trees. The login engine's power helpers call
 servicectl, preserving PID 1 lifecycle ownership and authorization boundaries.
 Policies and PAM provider selection stay explicit. The baseline external-daemon
 adapter remains available for bootstrap builds; it is not the full engine.

@@ -1,2 +1,2 @@
-# Unified diff context includes a literal space on empty context lines.
-engines/patches/*.patch whitespace=-blank-at-eol
+# Imported source trees use this macro to mark generated fixtures and data.
+[attr]generated

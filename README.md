@@ -66,6 +66,6 @@ Read [standalone engine build/compatibility](engines/README.md),
 
 The default Meson configuration builds the small bootstrap profile. The LPM
 recipe enables the full standalone-engine profile. Follow engines/README.md to
-fetch pinned sources and build it with Meson/Ninja; it needs the listed native
+build the tracked vendored sources with Meson/Ninja; it needs the listed native
 development dependencies. These source-derived engines retain upstream LGPL/GPL
 licenses and are independent of an installed systemd/elogind daemon.

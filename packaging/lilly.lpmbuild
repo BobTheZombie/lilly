@@ -11,7 +11,7 @@ SOURCE=("https://github.com/BobTheZombie/lilly/archive/refs/heads/main.tar.gz")
 SHA256SUMS=("SKIP") # Replace branch snapshot with a verified release before distribution.
 PATCHES=()
 REQUIRES=("glibc" "pam" "acl" "audit" "libcap" "libseccomp" "kmod" "util-linux-libs" "dbus" "polkit")
-BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils" "pam" "acl" "audit" "libcap" "libseccomp" "kmod" "util-linux-libs" "git" "gperf" "pkgconf" "patchelf")
+BUILD_REQUIRES=("gcc" "meson" "ninja" "python" "binutils" "pam" "acl" "audit" "libcap" "libseccomp" "kmod" "util-linux-libs" "gperf" "pkgconf" "patchelf")
 if [ "$ARCH" = x86_64 ]; then BUILD_REQUIRES+=("gnu-efi"); fi
 REQUIRES_PYTHON_DEPENDENCIES=("jinja2")
 PROVIDES=("lilly" "servicectl" "lillyboot" "lilly-logd" "lilly-devices" "lilly-sessions" "lilly-udevadm" "lilly-loginctl" "lilly-inhibit" "lilly-hwdb" "lilly-udevd" "lilly-logind")
@@ -28,8 +28,8 @@ prepare() {
     cd "$SRCROOT/$NAME-$VERSION"
     test -f meson.build
     test -f src/lilly.c
-    python3 tools/build_engines.py fetch --engine udev --sources "$SRCROOT/lilly-engine-sources"
-    python3 tools/build_engines.py fetch --engine logind --sources "$SRCROOT/lilly-engine-sources"
+    test -f vendor/udev/meson.build
+    test -f vendor/logind/meson.build
 }
 build() {
     set -euxo pipefail
@@ -38,7 +38,7 @@ build() {
     if [ "$ARCH" = x86_64 ]; then efi=true; fi
     meson setup build --prefix=/usr --libdir=lib --libexecdir=/usr/libexec --sysconfdir=/etc \
         --buildtype=release --wrap-mode=nodownload -Dvm_tests=false -Dpam=enabled -Defi="$efi" \
-        -Dnative_engines=true -Dengine_sources="$SRCROOT/lilly-engine-sources" \
+        -Dnative_engines=true -Dengine_sources="$SRCROOT/$NAME-$VERSION/vendor" \
         -Dengine_jobs="${LPM_BUILD_JOBS:-4}"
     meson compile -C build -j "${LPM_BUILD_JOBS:-$(nproc)}"
 }

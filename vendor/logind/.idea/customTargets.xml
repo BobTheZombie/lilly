@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CLionExternalBuildManager">
+    <target id="3b587314-842f-47a6-a273-943cab3dd19d" name="test DEBUG no varlink" defaultType="MAKE">
+      <configuration id="77afdec8-ac78-4fda-b9f1-e135507574bf" name="test DEBUG no varlink">
+        <build type="MAKE">
+          <make targetName="test DEBUG=YES BUILDMODE=release VARLINK=NO PREFIX=/tmp/elogind_test_d JUST_PRINT=NO" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=YES" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="cd3b4e0e-837f-4f0d-9f12-2e1f59d4ce33" name="test RELEASE" defaultType="MAKE">
+      <configuration id="da992a88-4622-4071-a226-4fbb568e641a" name="test RELEASE">
+        <build type="MAKE">
+          <make targetName="test DEBUG=NO BUILDMODE=release PREFIX=/tmp/elogind_test JUST_PRINT=NO" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=NO" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="9b409a38-fcdc-4d83-a799-2be4b13002ca" name="build DEBUG" defaultType="MAKE">
+      <configuration id="e6920f0b-2f23-4cdb-8687-857579dc85b7" name="build DEBUG">
+        <build type="MAKE">
+          <make targetName="all DEBUG=YES BUILDMODE=release PREFIX=/tmp/elogind_test_d JUST_PRINT=NO" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=YES" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="cf0ca109-6547-4f73-9424-a0ea902129ec" name="all RELEASE" defaultType="MAKE">
+      <configuration id="cfa192f0-9932-45a8-ab80-649fcc3c93a4" name="all RELEASE">
+        <build type="MAKE">
+          <make targetName="all DEBUG=NO BUILDMODE=release PREFIX=/tmp/elogind_test JUST_PRINT=NO" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=NO" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="666f737e-48f4-4143-92ac-caf35cbd7e47" name="justprint DEBUG" defaultType="MAKE">
+      <configuration id="1f817d12-c8b9-42ac-898d-5af4afcbbbb0" name="justprint DEBUG">
+        <build type="MAKE">
+          <make targetName="justprint DEBUG=YES BUILDMODE=release" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=YES" />
+        </clean>
+      </configuration>
+    </target>
+    <target id="bd9ad3f1-dc6a-4163-8af3-1d029f9d2637" name="justprint RELEASE" defaultType="MAKE">
+      <configuration id="01b27513-30c0-43dd-9074-64de49c20add" name="justprint RELEASE">
+        <build type="MAKE">
+          <make targetName="justprint DEBUG=NO BUILDMODE=release" />
+        </build>
+        <clean type="MAKE">
+          <make targetName="clean DEBUG=NO" />
+        </clean>
+      </configuration>
+    </target>
+  </component>
+</project>

@@ -1,12 +1,14 @@
 {
   "udev": {
     "repository": "https://github.com/systemd/systemd.git",
+    "source_directory": "vendor/udev",
     "revision": "32ba9cee3c9cef33b7081768e8ff58b410a523da",
     "version": "257.10",
     "license": "LGPL-2.1-or-later, GPL-2.0-or-later (component-specific)"
   },
   "logind": {
     "repository": "https://github.com/elogind/elogind.git",
+    "source_directory": "vendor/logind",
     "revision": "361db5752b16122fc21cf8c8cf188bcf45f9702e",
     "version": "256",
     "license": "LGPL-2.1-or-later, GPL-2.0-or-later (component-specific)"

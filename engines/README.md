@@ -1,11 +1,14 @@
 # Standalone Lilly device and login1 engines
 
 These are source-built C engines, not wrappers that exec an installed udevd or
-elogind daemon. The source manifests pin upstream commits; the small Lilly patch
-series is applied before a Meson/Ninja build. Upstream notices and licenses are
-retained. Lilly core/build integration is MIT; imported engine code remains under
-its original LGPL/GPL component licenses. This is an integration/fork of existing
-code, not a claim that the engine internals were written from scratch.
+elogind daemon. Their complete upstream source snapshots live in `vendor/udev`
+and `vendor/logind`. Lilly-specific behavior is maintained directly in those
+trees, so source edits are ordinary Lilly changes and builds never clone or patch
+another checkout. `sources.json` records each upstream URL and imported commit.
+Upstream notices and licenses are retained. Lilly core/build integration is MIT;
+imported engine code remains under its original LGPL/GPL component licenses.
+This is an integration/fork of existing code, not a claim that the engine
+internals were written from scratch.
 
 ## Build
 
@@ -17,23 +20,25 @@ build supplies libudev headers/library to the login engine; external libudev
 headers and an external device daemon are not required.
 
 ```sh
-python3 tools/build_engines.py fetch --engine udev
-python3 tools/build_engines.py fetch --engine logind
 meson setup build-full -Dpam=enabled -Dnative_engines=true \
-  -Dengine_sources="$PWD/build/engine-sources" -Dengine_jobs=4
+  -Dengine_sources="$PWD/vendor" -Dengine_jobs=4
 meson compile -C build-full
 meson test -C build-full --print-errorlogs
 meson install -C build-full --destdir "$PWD/stage"
 ```
 
-Fetching is explicit; build/install never fetch mutable branches. Source HEAD
-must match the manifest. No checkout reset erases local changes. Build metadata
-records patch hashes and the source diff hash; stage rejects changed patches or
-source. Compiled objects remain available for incremental Ninja builds. Changing
-engine sources manually requires invoking the build driver explicitly. Installation
-requires a real staging DESTDIR and never runs the device or login daemons on
-the build host. A private hardware DB is generated under that staging root.
-Cross-building this engine integration is not currently supported.
+Build/install never fetch source or install to host `/`. Build metadata records
+the vendored source-tree hash; staging rejects source edits made after the engine
+was built. Ninja checks the source trees on every build invocation while retaining
+compiled objects for incremental builds. Installation requires a real staging
+DESTDIR and never runs the device or login daemons on the build host. A private
+hardware DB is generated under that staging root. Cross-building this engine
+integration is not currently supported.
+
+To update an upstream snapshot, import its new commit into the relevant `vendor/`
+directory, preserve its license files, update `sources.json`, then make and test
+Lilly adaptations as normal source changes. Runtime/package builds do not perform
+that update step.
 
 The LPM recipe selects this full profile. Source caches live under SRCROOT and
 remain subject to LPM build-state/resume handling. The bootstrap core can still
@@ -51,7 +56,7 @@ adapter and basic PAM session records.
 - /usr/bin/lilly-loginctl and /usr/bin/lilly-inhibit: actual login1 clients.
 - /usr/lib/security/pam_lilly_login.so: full login1 PAM client; creates sessions
   through D-Bus and holds/relinquishes the session FIFO descriptor.
-- Private runtime libraries, source/patch provenance and original licenses.
+- Private runtime libraries, vendored-source provenance and original licenses.
 
 /etc/udev and standard vendor rules remain recognized. Private bundled rules are
 lowest priority; administrator and existing vendor files with the same basename

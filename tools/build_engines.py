@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Build pinned standalone C engines with Meson/Ninja. Never runs host daemons.
-Fetch is an explicit command; build and stage never fetch or install to host /.
+"""Build Lilly's in-tree udev and logind source snapshots with Meson/Ninja.
+Build and stage never fetch sources or install to host /.
 """
 import argparse
 import hashlib
@@ -21,24 +21,33 @@ def command(args,**kw):
 def source(args):
     return args.sources/args.engine
 
+def tree_hash(path):
+    digest=hashlib.sha256()
+    for root,dirs,files in os.walk(path,followlinks=False):
+        dirs.sort();files.sort()
+        base=Path(root)
+        for name in dirs+files:
+            item=base/name
+            rel=item.relative_to(path).as_posix()
+            digest.update(rel.encode()+b'\0')
+            if item.is_symlink():
+                digest.update(b'link\0'+os.readlink(item).encode()+b'\0')
+            elif item.is_file():
+                digest.update(b'file\0')
+                with item.open('rb') as stream:
+                    for chunk in iter(lambda:stream.read(1024*1024),b''):
+                        digest.update(chunk)
+                digest.update(b'\0')
+    return digest.hexdigest()
+
 def verify(args):
     path=source(args);spec=SOURCES[args.engine]
-    actual=subprocess.check_output(['git','-C',str(path),'rev-parse','HEAD'],text=True).strip()
-    if actual!=spec['revision']:raise RuntimeError('Wrong engine source revision: '+actual)
+    if not (path/'meson.build').is_file():
+        raise RuntimeError('Missing vendored source tree: '+str(path))
     return path
-
-def patches(args):
-    return sorted((ROOT/'engines/patches').glob(args.engine+'-*.patch'))
 
 def prepare(args):
-    path=verify(args)
-    # Never reset a developer's edits. Apply each patch once or fail closed.
-    for patch in patches(args):
-        reverse=subprocess.run(['git','-C',str(path),'apply','--reverse','--check',str(patch)],capture_output=True)
-        if reverse.returncode==0:continue
-        command(['git','-C',path,'apply','--check',patch])
-        command(['git','-C',path,'apply',patch])
-    return path
+    return verify(args)
 
 def options(engine):
     common=['--prefix=/usr','--libdir=lib','--sysconfdir=/etc','--localstatedir=/var',
@@ -75,8 +84,7 @@ def build(args):
             targets.append(str(target))
     command(['ninja','-C',directory,'-j',str(args.jobs)]+targets,env=env)
     state={'engine':args.engine,'source':SOURCES[args.engine],
-           'diff_sha256':hashlib.sha256(subprocess.check_output(['git','-C',str(path),'diff','--binary'])).hexdigest(),
-           'patches':{p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in patches(args)}}
+           'source_tree_sha256':tree_hash(path)}
     (directory/'lilly-engine.json').write_text(json.dumps(state,indent=2)+'\n')
 
 def stage(args):
@@ -84,10 +92,8 @@ def stage(args):
     if args.destdir.resolve()==Path('/'):raise RuntimeError('A staging DESTDIR is required; host installation is forbidden')
     directory=(args.build/args.engine).resolve();state=directory/'lilly-engine.json'
     if not state.exists():raise RuntimeError('Build the engine before staging it')
-    expected={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in patches(args)}
-    if json.loads(state.read_text())['patches']!=expected:raise RuntimeError('Engine patches changed; rebuild first')
-    actual_diff=hashlib.sha256(subprocess.check_output(['git','-C',str(source(args)),'diff','--binary'])).hexdigest()
-    if json.loads(state.read_text())['diff_sha256']!=actual_diff:raise RuntimeError('Source changed since build')
+    if json.loads(state.read_text())['source_tree_sha256']!=tree_hash(source(args)):
+        raise RuntimeError('Vendored source changed since build')
     installed=json.loads(subprocess.check_output(['meson','introspect','--installed',str(directory)],text=True))
     copied=[]
     def destination(relative):
@@ -162,9 +168,9 @@ def stage(args):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['fetch','build','stage'])
+    p.add_argument('command',choices=['build','stage'])
     p.add_argument('--engine',choices=SOURCES,required=True)
-    p.add_argument('--sources',type=Path,default=ROOT/'build/engine-sources')
+    p.add_argument('--sources',type=Path,default=ROOT/'vendor')
     p.add_argument('--build',type=Path,default=ROOT/'build/engines')
     p.add_argument('--jobs',type=int,default=int(os.environ.get('LPM_BUILD_JOBS',min(os.cpu_count() or 1,8))))
     p.add_argument('--destdir',type=Path)
@@ -172,17 +178,7 @@ def main():
     args=p.parse_args()
     args.sources=args.sources.resolve();args.build=args.build.resolve()
     if args.jobs<1:p.error('--jobs must be positive')
-    if args.command=='fetch':
-        dest=source(args)
-        if dest.exists():
-            head=subprocess.run(['git','-C',str(dest),'rev-parse','--verify','HEAD'],capture_output=True)
-            if head.returncode==0:verify(args);return
-            if not (dest/'.git').is_dir():raise RuntimeError('Existing source directory is not a git checkout')
-        else:
-            dest.mkdir(parents=True);command(['git','init',dest])
-        command(['git','-C',dest,'fetch','--depth=1',SOURCES[args.engine]['repository'],SOURCES[args.engine]['revision']])
-        command(['git','-C',dest,'checkout','--detach','FETCH_HEAD']);verify(args)
-    elif args.command=='build':
+    if args.command=='build':
         build(args)
         if args.stamp:args.stamp.write_text((args.build/args.engine/'lilly-engine.json').read_text())
     else:
