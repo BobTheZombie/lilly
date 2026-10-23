@@ -38,10 +38,12 @@ libudev remain the actual provider's implementation, not a new Lilly engine.
 The session module does not implement logind, seats or device ACL assignment.
 See DEVICES.md and the shipped pam documentation for activation boundaries.
 
-0.5 builds the vendored udev 257.10 and elogind/login1 256 snapshots in `vendor/`
-into private Lilly binaries. Lilly-specific adaptations are part of those source
-trees; builds do not fetch or patch an external checkout. Upstream licenses and
-provenance are retained. Runtime external udevd or elogind executables are
+0.5 builds the vendored udev 257.10 and elogind/login1 256 source subsets in
+`vendor/` into private Lilly binaries. These retain the engine implementations
+and their shared dependencies, while excluding unrelated upstream components.
+Lilly-specific adaptations are part of those source trees; builds do not fetch or
+patch an external checkout. Upstream licenses and provenance are retained. Runtime
+external udevd or elogind executables are
 unnecessary in that profile. See engines/README.md for exact API/version
 boundaries, activation and outstanding hardware validation.
 This does not implement the systemd user-service manager or every later login1

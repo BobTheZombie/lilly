@@ -2569,7 +2569,6 @@ libsystemd_includes = libelogind_includes
 
 includes = [libelogind_includes, include_directories('src/shared')]
 
-subdir('po')
 #if 0 /// UNNEEDED by elogind
 # subdir('catalog')
 #endif // 0
@@ -2862,12 +2861,10 @@ subdir('src/update-utmp')
 # subdir('src/boot')
 # subdir('src/bootctl')
 #endif // 0
-subdir('src/busctl')
 
 #if 0 /// UNNEEDED by elogind
 # subdir('src/cgls')
 #endif // 0
-subdir('src/cgroups-agent')
 #if 0 /// UNNEEDED by elogind
 # subdir('src/cgtop')
 # subdir('src/coredump')
@@ -2926,7 +2923,6 @@ subdir('src/login')
 # subdir('src/nss-mymachines')
 # subdir('src/nss-resolve')
 #endif // 0
-subdir('src/nss-elogind')
 #if 0 /// UNNEEDED by elogind
 # subdir('src/oom')
 # subdir('src/path')
@@ -2970,13 +2966,9 @@ subdir('src/nss-elogind')
 # subdir('src/update-utmp')
 # subdir('src/user-sessions')
 #endif // 0
-subdir('src/userdb')
 #if 0 /// elogind: varlinkctl requires the real varlink implementation
 # subdir('src/varlinkctl')
 #else // 0
-if get_option('varlink')
-        subdir('src/varlinkctl')
-endif
 #endif // 0
 #if 0 /// UNNEEDED by elogind
 # subdir('src/vconsole')
@@ -2989,7 +2981,6 @@ endif
 
 subdir('src/systemd')
 
-subdir('src/test')
 
 #if 0 /// UNNEEDED by elogind
 # subdir('src/fuzz')
@@ -3305,15 +3296,12 @@ subdir('rules.d')
 # subdir('docs/var-log')
 # subdir('hwdb.d')
 #endif // 0
-subdir('man')
 #if 0 /// UNNEEDED by elogind
 # subdir('modprobe.d')
 # subdir('network')
 # subdir('presets')
 # subdir('profile.d')
 #endif // 0
-subdir('shell-completion/bash')
-subdir('shell-completion/zsh')
 #if 0 /// UNNEEDED by elogind
 # subdir('sysctl.d')
 # subdir('sysusers.d')
@@ -3333,23 +3321,6 @@ subdir('shell-completion/zsh')
 #endif // 0
 install_data('LICENSE.GPL2',
              'LICENSE.LGPL2.1',
-#if 0 /// elogind has upgraded to markdown, and the NEWS file is useless
-#              'NEWS',
-#              'README',
-#else // 0
-             'README.md',
-#endif // 0
-             'docs/CODING_STYLE.md',
-#if 0 /// irrelevant for elogind
-#              'docs/DISTRO_PORTING.md',
-#endif // 0
-             'docs/ENVIRONMENT.md',
-#if 0 /// irrelevant for elogind
-#              'docs/HACKING.md',
-#              'docs/TRANSIENT-SETTINGS.md',
-#              'docs/TRANSLATORS.md',
-#              'docs/UIDS-GIDS.md',
-#endif // 0
              install_dir : docdir)
 
 #if 0 /// irrelevant for elogind
@@ -3364,20 +3335,6 @@ install_emptydir(elogindstatedir)
 #endif // 0
 
 #####################################################################
-
-# Ensure that changes to the docs/ directory do not break the
-# basic Github pages build. But only run it in developer mode,
-# as it might be fragile due to changes in the tooling, and it is
-# not generally useful for users.
-jekyll = find_program('jekyll', required : false)
-if get_option('mode') == 'developer' and want_tests != 'false' and jekyll.found()
-        test('github-pages',
-             jekyll,
-             suite : 'dist',
-             args : ['build',
-                     '--source', meson.project_source_root() / 'docs',
-                     '--destination', meson.project_build_root() / '_site'])
-endif
 
 #####################################################################
 

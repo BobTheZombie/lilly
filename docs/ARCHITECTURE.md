@@ -63,9 +63,11 @@ creation and global tmpfiles processing remain separate future utilities.
 
 ## Standalone engine sources
 
-The optional native_engines profile builds the tracked source snapshots in
-`vendor/udev` and `vendor/logind`. Meson/Ninja builds complete device and login
-engines and installs private binaries/libraries/data through DESTDIR. Lilly's
+The optional native_engines profile builds the tracked udev and login1 source
+subsets in `vendor/udev` and `vendor/logind`, including the shared libraries those
+engines require. Unrelated systemd/elogind components are excluded. Meson/Ninja
+builds the device and login engines and installs private binaries/libraries/data
+through DESTDIR. Lilly's
 integration changes live in those source trees. The login engine's power helpers call
 servicectl, preserving PID 1 lifecycle ownership and authorization boundaries.
 Policies and PAM provider selection stay explicit. The baseline external-daemon

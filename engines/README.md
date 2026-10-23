@@ -1,12 +1,14 @@
 # Standalone Lilly device and login1 engines
 
 These are source-built C engines, not wrappers that exec an installed udevd or
-elogind daemon. Their complete upstream source snapshots live in `vendor/udev`
-and `vendor/logind`. Lilly-specific behavior is maintained directly in those
-trees, so source edits are ordinary Lilly changes and builds never clone or patch
-another checkout. `sources.json` records each upstream URL and imported commit.
-Upstream notices and licenses are retained. Lilly core/build integration is MIT;
-imported engine code remains under its original LGPL/GPL component licenses.
+elogind daemon. The required udev and login1 implementation code, plus shared
+library code those engines depend on, lives in `vendor/udev` and `vendor/logind`.
+Unrelated upstream daemons, tools, tests, documentation and packaging data are
+excluded. Lilly-specific behavior is maintained directly in those trees, so
+source edits are ordinary Lilly changes and builds never clone or patch another
+checkout. `sources.json` records each upstream URL and imported commit. Upstream
+license texts are retained. Lilly core/build integration is MIT; imported engine
+code remains under its original LGPL/GPL component licenses.
 This is an integration/fork of existing code, not a claim that the engine
 internals were written from scratch.
 
@@ -35,10 +37,10 @@ DESTDIR and never runs the device or login daemons on the build host. A private
 hardware DB is generated under that staging root. Cross-building this engine
 integration is not currently supported.
 
-To update an upstream snapshot, import its new commit into the relevant `vendor/`
-directory, preserve its license files, update `sources.json`, then make and test
-Lilly adaptations as normal source changes. Runtime/package builds do not perform
-that update step.
+To update an engine, refresh only its required implementation and shared support
+files from the recorded upstream revision, preserve its license files, update
+`sources.json`, then make and test Lilly adaptations as normal source changes.
+Runtime/package builds do not perform that update step.
 
 The LPM recipe selects this full profile. Source caches live under SRCROOT and
 remain subject to LPM build-state/resume handling. The bootstrap core can still

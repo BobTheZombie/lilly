@@ -831,9 +831,8 @@ if time_epoch <= 0
                 endif
         endif
         if time_epoch == ''
-                NEWS = files('NEWS')
-                time_epoch = run_command(stat, '-c', '%Y', NEWS,
-                                         check : true).stdout()
+                # The trimmed engine snapshot does not include release notes.
+                time_epoch = '0'
         endif
         time_epoch = time_epoch.strip().to_int()
 endif
@@ -2150,8 +2149,6 @@ libsystemd_includes = [basic_includes, include_directories(
 
 includes = [libsystemd_includes, include_directories('src/shared')]
 
-subdir('po')
-subdir('catalog')
 subdir('src/fundamental')
 subdir('src/basic')
 subdir('src/libsystemd')
@@ -2316,11 +2313,11 @@ elif want_libfuzzer
         }
 else
         fuzz_additional_kwargs = {
-                'sources' : files('src/fuzz/fuzz-main.c'),
+                'sources' : [],
         }
 endif
 fuzz_additional_kwargs += {
-        'include_directories' : include_directories('src/fuzz'),
+        'include_directories' : include_directories('src/basic'),
         'c_args' : test_cflags,
 }
 
@@ -2367,130 +2364,11 @@ module_additional_kwargs = {
 
 #####################################################################
 
-# systemd-analyze requires 'libcore'
-subdir('src/core')
-# systemd-networkd requires 'libsystemd_network'
-subdir('src/libsystemd-network')
-# hwdb requires 'udev_link_with' and 'udev_rpath'
+# Build only the device manager, its hwdb compiler, and their shared libraries.
 subdir('src/udev')
-
-subdir('src/ac-power')
-subdir('src/analyze')
-subdir('src/ask-password')
-subdir('src/backlight')
-subdir('src/battery-check')
-subdir('src/binfmt')
-subdir('src/bless-boot')
-subdir('src/boot')
-subdir('src/bootctl')
-subdir('src/busctl')
-subdir('src/cgls')
-subdir('src/cgroups-agent')
-subdir('src/cgtop')
-subdir('src/coredump')
-subdir('src/creds')
-subdir('src/cryptenroll')
-subdir('src/cryptsetup')
-subdir('src/debug-generator')
-subdir('src/delta')
-subdir('src/detect-virt')
-subdir('src/dissect')
-subdir('src/environment-d-generator')
-subdir('src/escape')
-subdir('src/firstboot')
-subdir('src/fsck')
-subdir('src/fstab-generator')
-subdir('src/getty-generator')
-subdir('src/gpt-auto-generator')
-subdir('src/growfs')
-subdir('src/hibernate-resume')
-subdir('src/home')
-subdir('src/hostname')
 subdir('src/hwdb')
-subdir('src/id128')
-subdir('src/import')
-subdir('src/initctl')
-subdir('src/integritysetup')
-subdir('src/journal')
-subdir('src/journal-remote')
-subdir('src/kernel-install')
-subdir('src/keyutil')
-subdir('src/locale')
-subdir('src/login')
-subdir('src/machine')
-subdir('src/machine-id-setup')
-subdir('src/measure')
-subdir('src/mountfsd')
-subdir('src/modules-load')
-subdir('src/mount')
-subdir('src/network')
-subdir('src/notify')
-subdir('src/nspawn')
-subdir('src/nsresourced')
-subdir('src/nss-myhostname')
-subdir('src/nss-mymachines')
-subdir('src/nss-resolve')
-subdir('src/nss-systemd')
-subdir('src/oom')
-subdir('src/path')
-subdir('src/pcrextend')
-subdir('src/pcrlock')
-subdir('src/portable')
-subdir('src/pstore')
-subdir('src/quotacheck')
-subdir('src/random-seed')
-subdir('src/rc-local-generator')
-subdir('src/remount-fs')
-subdir('src/repart')
-subdir('src/reply-password')
-subdir('src/resolve')
-subdir('src/rfkill')
-subdir('src/rpm')
-subdir('src/run')
-subdir('src/run-generator')
-subdir('src/sbsign')
-subdir('src/shutdown')
-subdir('src/sleep')
-subdir('src/socket-activate')
-subdir('src/socket-proxy')
-subdir('src/ssh-generator')
-subdir('src/stdio-bridge')
-subdir('src/sulogin-shell')
-subdir('src/sysctl')
-subdir('src/sysext')
-subdir('src/system-update-generator')
-subdir('src/systemctl')
-subdir('src/sysupdate')
-subdir('src/sysusers')
-subdir('src/sysv-generator')
-subdir('src/storagetm')
-subdir('src/timedate')
-subdir('src/timesync')
-subdir('src/tmpfiles')
-subdir('src/tpm2-setup')
-subdir('src/tty-ask-password-agent')
-subdir('src/update-done')
-subdir('src/update-utmp')
-subdir('src/user-sessions')
-subdir('src/userdb')
-subdir('src/varlinkctl')
-subdir('src/vconsole')
-subdir('src/veritysetup')
-subdir('src/vmspawn')
-subdir('src/volatile-root')
-subdir('src/vpick')
-subdir('src/xdg-autostart-generator')
-
 subdir('src/systemd')
-
-subdir('src/test')
-subdir('src/fuzz')
-subdir('src/ukify/test')  # needs to be last for test_env variable
-subdir('test/fuzz')
-
-subdir('mime')
-
-alias_target('devel', libsystemd_pc, libudev_pc, systemd_pc, udev_pc)
+alias_target('devel', libsystemd_pc, libudev_pc, udev_pc)
 
 #####################################################################
 
@@ -2712,33 +2590,6 @@ endif
 
 #####################################################################
 
-ukify_depends = []
-
-foreach executable : ['systemd-measure', 'systemd-sbsign', 'systemd-keyutil']
-        if executable in executables_by_name
-                ukify_depends += [executables_by_name[executable]]
-        endif
-endforeach
-
-ukify = custom_target(
-        input : 'src/ukify/ukify.py',
-        output : 'ukify',
-        command : [jinja2_cmdline, '@INPUT@', '@OUTPUT@'],
-        install : want_ukify,
-        install_mode : 'rwxr-xr-x',
-        depends : ukify_depends,
-        install_dir : bindir)
-if want_ukify
-        public_programs += ukify
-
-        # symlink for backwards compatibility after rename
-        meson.add_install_script(sh, '-c',
-                                 ln_s.format(bindir / 'ukify',
-                                             libexecdir / 'ukify'))
-endif
-
-#####################################################################
-
 mkosi = find_program('mkosi', required : false)
 if want_integration_tests and not mkosi.found()
         error('Could not find mkosi which is required to run the integration tests')
@@ -2775,66 +2626,13 @@ endif
 ############################################################
 
 subdir('rules.d')
-subdir('test')
 
 #####################################################################
 
-subdir('docs/sysvinit')
-subdir('docs/var-log')
 subdir('hwdb.d')
-subdir('man')
-subdir('modprobe.d')
-subdir('network')
-subdir('presets')
-subdir('profile.d')
-subdir('shell-completion/bash')
-subdir('shell-completion/zsh')
-subdir('sysctl.d')
-subdir('sysusers.d')
-subdir('tmpfiles.d')
-subdir('units')
-
-install_subdir('factory/etc',
-               install_dir : factorydir)
-subdir('factory/templates')
-
-if install_sysconfdir
-        install_data('xorg/50-systemd-user.sh',
-                     install_dir : xinitrcdir)
-endif
-install_data('LICENSE.GPL2',
-             'LICENSE.LGPL2.1',
-             'NEWS',
-             'README',
-             'docs/CODING_STYLE.md',
-             'docs/DISTRO_PORTING.md',
-             'docs/ENVIRONMENT.md',
-             'docs/HACKING.md',
-             'docs/TRANSIENT-SETTINGS.md',
-             'docs/TRANSLATORS.md',
-             'docs/UIDS-GIDS.md',
-             install_dir : docdir)
 
 install_subdir('LICENSES',
                install_dir : docdir)
-
-install_emptydir(systemdstatedir)
-
-#####################################################################
-
-# Ensure that changes to the docs/ directory do not break the
-# basic Github pages build. But only run it in developer mode,
-# as it might be fragile due to changes in the tooling, and it is
-# not generally useful for users.
-jekyll = find_program('jekyll', required : false)
-if get_option('mode') == 'developer' and want_tests != 'false' and jekyll.found()
-        test('github-pages',
-             jekyll,
-             suite : 'dist',
-             args : ['build',
-                     '--source', meson.project_source_root() / 'docs',
-                     '--destination', meson.project_build_root() / '_site'])
-endif
 
 #####################################################################
 
